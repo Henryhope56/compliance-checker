@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合规体检站 · 跨境招聘材料合规检测</title>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.7.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --surface-0:#F5F4F0; --surface-1:#EFEEE8; --surface-2:#FFFFFF;
+    --text-primary:#1D1D1B; --text-secondary:#5B5A54; --text-muted:#8B8A82;
+    --border:#DDDBD2;
+    --pass-bg:#EAF3DE; --pass-fg:#3B6D11;
+    --warn-bg:#FAEEDA; --warn-fg:#854F0B;
+    --restrict-bg:#FCEBEB; --restrict-fg:#A32D2D;
+    --forbid-bg:#2C2C2A; --forbid-fg:#FFFFFF;
+    --accent:#185FA5;
+    --radius:8px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --surface-0:#1A1A18; --surface-1:#232320; --surface-2:#2A2A27;
+      --text-primary:#F0EFE9; --text-secondary:#B4B2A9; --text-muted:#888780;
+      --border:#3A3A36;
+      --pass-bg:#173404; --pass-fg:#97C459;
+      --warn-bg:#412402; --warn-fg:#FAC775;
+      --restrict-bg:#501313; --restrict-fg:#F09595;
+      --forbid-bg:#F0EFE9; --forbid-fg:#1A1A18;
+      --accent:#85B7EB;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:var(--surface-0); color:var(--text-primary); padding:32px 16px 80px; }
+  .wrap{ max-width:760px; margin:0 auto; }
+  .eyebrow{ font-size:12px; letter-spacing:0.14em; color:var(--text-muted); margin-bottom:6px; }
+  h1{ font-size:24px; font-weight:600; margin:0 0 6px; }
+  .sub{ font-size:14px; color:var(--text-secondary); margin-bottom:8px; line-height:1.6; max-width:640px; }
+  .disclaimer{ font-size:12px; color:var(--text-muted); margin-bottom:28px; }
+
+  .step{ background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:16px; }
+  .step-title{ font-size:14px; font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .step-num{ width:22px; height:22px; border-radius:50%; background:var(--text-primary); color:var(--surface-2); font-size:12px; display:flex; align-items:center; justify-content:center; flex:0 0 22px; }
+  .step-desc{ font-size:12.5px; color:var(--text-muted); margin-bottom:14px; margin-inline-start:30px; }
+
+  .group{ margin-inline-start:30px; margin-bottom:14px; }
+  .region-title{ font-size:12px; color:var(--text-secondary); margin-bottom:8px; font-weight:500; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-size:13px; padding:6px 12px; border-radius:999px; border:0.5px solid var(--border); background:var(--surface-1); cursor:pointer; user-select:none; color:var(--text-secondary); }
+  .chip.active{ background:var(--text-primary); color:var(--surface-2); border-color:var(--text-primary); }
+  .chip.nolaw{ border-style:dashed; }
+
+  .modeToggle{ display:flex; gap:8px; margin-inline-start:30px; margin-bottom:14px; }
+  .modeBtn{ font-family:inherit; font-size:13px; padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border); background:var(--surface-1); color:var(--text-secondary); cursor:pointer; }
+  .modeBtn.active{ background:var(--text-primary); color:var(--surface-2); border-color:var(--text-primary); }
+
+  .inputArea{ margin-inline-start:30px; }
+  textarea{ width:100%; min-height:140px; font-family:inherit; font-size:13px; padding:12px; border-radius:var(--radius); border:0.5px solid var(--border); background:var(--surface-1); color:var(--text-primary); resize:vertical; }
+  .filebox{ border:1.5px dashed var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--text-secondary); font-size:13px; cursor:pointer; background:var(--surface-1); }
+  .filebox:hover{ border-color:var(--accent); }
+  .filebox input{ display:none; }
+  .fileStatus{ margin-top:10px; font-size:12.5px; color:var(--text-secondary); }
+  .fileStatus.warn{ color:var(--warn-fg); }
+  .file-item{ display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--surface-1); border-radius:6px; margin-top:8px; font-size:12.5px; }
+  .file-item .fname{ font-weight:500; color:var(--text-primary); }
+  .file-item .fmeta{ color:var(--text-muted); margin-inline-start:8px; }
+  .file-item .fmeta.warn{ color:var(--warn-fg); }
+  .file-item button{ font-size:11.5px; padding:3px 9px; border-radius:6px; border:0.5px solid var(--border); background:var(--surface-2); color:var(--text-secondary); cursor:pointer; }
+  .file-item button:hover{ background:var(--surface-0); }
+  .text-preview{ margin-top:10px; padding:10px 12px; background:var(--surface-1); border-radius:6px; font-size:12px; color:var(--text-muted); max-height:80px; overflow:hidden; position:relative; line-height:1.6; white-space:pre-wrap; }
+
+  .source-panel{ background:var(--surface-1); border-radius:var(--radius); padding:14px 16px; margin-bottom:16px; font-size:12.5px; color:var(--text-secondary); }
+  .source-panel summary{ cursor:pointer; font-weight:500; color:var(--text-primary); }
+  .source-panel .src-body{ margin-top:10px; white-space:pre-wrap; line-height:1.7; max-height:200px; overflow-y:auto; background:var(--surface-2); padding:10px; border-radius:6px; }
+
+  .actions{ display:flex; justify-content:center; margin:20px 0 28px; }
+  button.generate{ font-family:inherit; font-size:14px; font-weight:500; padding:11px 28px; border-radius:var(--radius); border:none; background:var(--text-primary); color:var(--surface-2); cursor:pointer; }
+  button.generate:hover{ opacity:0.9; }
+  button.generate:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  #report{ display:none; }
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--text-secondary); margin-bottom:18px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .dot{ width:10px; height:10px; border-radius:3px; }
+
+  .field-card{ background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+  .field-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .field-name{ font-size:14px; font-weight:600; }
+  .market-badges{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:500; }
+  .b-pass{ background:var(--pass-bg); color:var(--pass-fg); }
+  .b-warn{ background:var(--warn-bg); color:var(--warn-fg); }
+  .b-restrict{ background:var(--restrict-bg); color:var(--restrict-fg); }
+  .b-forbid{ background:var(--forbid-bg); color:var(--forbid-fg); }
+  .b-nolaw{ background:var(--surface-1); color:var(--text-muted); border:0.5px dashed var(--border); }
+  .action-line{ font-size:12.5px; color:var(--text-secondary); line-height:1.7; padding:6px 10px; background:var(--surface-1); border-radius:6px; margin-top:4px; }
+  .action-line b{ color:var(--text-primary); }
+
+  .report-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .pdfBtn{ font-family:inherit; font-size:12.5px; padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border); background:var(--surface-2); color:var(--text-primary); cursor:pointer; }
+  .pdfBtn:hover{ background:var(--surface-1); }
+
+  .watermark{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; color:var(--text-primary); }
+
+  @media print{
+    body{ padding:0; background:#fff; }
+    .step, .actions, .disclaimer, .meta-row, .no-print, .manual-add{ display:none !important; }
+    #report{ display:block !important; }
+    .wrap{ max-width:100%; }
+    /* 打印时强制展开可折叠区块的内容，因为PDF没有交互能力，折叠状态下的内容会被浏览器隐藏 */
+    .credibility, .source-panel{ display:block !important; }
+    .credibility .cred-body, .source-panel .src-body{ display:block !important; }
+    .remove-manual{ display:none !important; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+
+  .empty-note{ font-size:13px; color:var(--text-muted); text-align:center; padding:20px; }
+
+  .credibility{ background:var(--surface-1); border-radius:var(--radius); padding:16px 18px; margin-bottom:20px; }
+  .credibility summary{ font-size:13px; font-weight:500; cursor:pointer; color:var(--text-primary); }
+  .credibility summary::marker{ color:var(--text-muted); }
+  .cred-body{ margin-top:12px; font-size:12.5px; color:var(--text-secondary); line-height:1.8; }
+  .cred-body h4{ font-size:12.5px; font-weight:600; color:var(--text-primary); margin:12px 0 4px; }
+  .cred-body h4:first-child{ margin-top:0; }
+  .cred-grid{ display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }
+  .meta-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:20px; padding-bottom:12px; border-bottom:0.5px solid var(--border); }
+
+  .citation{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .confidence-tag{ font-size:10.5px; padding:1px 6px; border-radius:4px; background:var(--surface-1); color:var(--text-muted); margin-inline-start:6px; }
+  .confidence-tag.manual-tag{ background:var(--warn-bg); color:var(--warn-fg); display:inline-flex; align-items:center; gap:6px; }
+  .remove-manual{ font-family:inherit; font-size:10px; padding:1px 6px; border-radius:4px; border:0.5px solid var(--warn-fg); background:transparent; color:var(--warn-fg); cursor:pointer; }
+  .remove-manual:hover{ background:var(--warn-bg); }
+
+  .manual-add{ display:flex; flex-direction:column; gap:8px; padding:12px 14px; margin-bottom:16px; background:var(--surface-1); border:0.5px dashed var(--border); border-radius:var(--radius); font-size:12.5px; }
+  .manual-add-row{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+  .manual-add-label{ color:var(--text-secondary); }
+  .manual-add select, .manual-add input[type="text"]{ font-family:inherit; font-size:12.5px; padding:5px 8px; border-radius:6px; border:0.5px solid var(--border); background:var(--surface-2); color:var(--text-primary); }
+  .manual-add input[type="text"]{ flex:1; min-width:160px; }
+  .manual-add button{ font-family:inherit; font-size:12.5px; padding:5px 12px; border-radius:6px; border:none; background:var(--text-primary); color:var(--surface-2); cursor:pointer; white-space:nowrap; }
+  .manual-add button:hover{ opacity:0.9; }
+  .manual-add-note{ font-size:12px; color:var(--text-muted); }
+  .manual-section-label{ font-size:12px; color:var(--text-muted); margin:14px 0 8px; padding-top:4px; border-top:0.5px dashed var(--border); }
+  .manual-section-label:first-of-type{ border-top:none; padding-top:0; }
+
+  .dpia-box{ background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1.25rem; }
+  .dpia-box h4{ font-size:14px; font-weight:600; color:var(--text-primary); margin:18px 0 8px; }
+  .dpia-box h4:first-child{ margin-top:0; }
+  .dpia-intro{ font-size:12.5px; color:var(--text-secondary); line-height:1.8; padding-bottom:12px; margin-bottom:6px; border-bottom:0.5px solid var(--border); }
+  .dpia-tofill{ border:1px dashed var(--border-strong); border-radius:6px; padding:10px 12px; font-size:12.5px; color:var(--text-muted); font-style:italic; margin-bottom:6px; }
+  .dpia-desc{ font-size:12.5px; color:var(--text-secondary); line-height:1.7; margin-bottom:8px; }
+  .dpia-list{ font-size:12.5px; color:var(--text-secondary); line-height:1.9; margin:0 0 8px; padding-inline-start:18px; }
+  .dpia-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:8px; }
+  .dpia-table th{ text-align:start; padding:6px 8px; background:var(--surface-1); font-weight:500; color:var(--text-secondary); }
+  .dpia-table td{ padding:6px 8px; border-bottom:0.5px solid var(--border); vertical-align:top; }
+  .dpia-table td.fname{ font-weight:500; color:var(--text-primary); }
+  .dpia-warn{ font-size:12.5px; background:var(--warn-bg); color:var(--warn-fg); border-radius:6px; padding:8px 10px; margin-bottom:8px; line-height:1.7; }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+  .topbar .eyebrow{ margin-bottom:0; }
+  .langSelect{ font-family:inherit; font-size:12.5px; padding:4px 8px; border-radius:6px; border:0.5px solid var(--border); background:var(--surface-2); color:var(--text-primary); cursor:pointer; }
+  .translation-note{ margin-top:8px; font-size:11px; color:var(--text-muted); text-align:center; }
+  :lang(zh-HK){ font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif; }
+  :lang(ja){ font-family:-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif; }
+  :lang(ar){ font-family:-apple-system,"Segoe UI","Geeza Pro","Tahoma",sans-serif; }
+  :lang(ar) .eyebrow{ letter-spacing:0; }
+  @media print{ .langSelect, .translation-note{ display:none !important; } }
+  .footer{ margin-top:48px; padding-top:16px; border-top:0.5px solid var(--border); font-size:11.5px; color:var(--text-muted); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="eyebrow" data-i18n="eyebrow">合规体检站</div>
+    <select id="langSelect" class="langSelect no-print" aria-label="Language / 语言"></select>
+  </div>
+  <h1 data-i18n="h1">跨境招聘材料合规体检</h1>
+  <div class="sub" data-i18n="sub">把一份真实的表单字段清单、offer模板、候选人申请表贴进来（或上传文件），工具自动识别里面收集了哪些字段，逐条告诉你在目标市场能不能收、该怎么改。</div>
+  <div class="meta-row">
+    <span data-i18n="metaCutoff">数据截止：2026-07-31</span>
+    <span id="metaCoverage">覆盖：32法域 · 30类字段</span>
+    <span data-i18n="metaMethod">识别方式：关键词匹配（非语义理解）</span>
+  </div>
+
+  <details class="credibility">
+    <summary data-i18n="credSummary">这份报告的依据是什么？为什么可信 — 展开查看方法论与局限</summary>
+    <div class="cred-body">
+      <h4 data-i18n="credSourcesH">法规数据来源</h4>
+      <div data-i18n="credSources">覆盖大中华区、东南亚、东北亚、大洋洲、欧盟、欧洲其他、北美、拉美、中东、非洲共10个区域、32个法域，具体法律依据见每条建议下方标注。</div>
+
+      <h4 data-i18n="credStdH">分类判断标准（招聘场景专用）</h4>
+      <div class="cred-grid">
+        <div data-i18n="credStdPass"><b>可收集</b> — 普通个人信息，具备合法基础（合同必要/告知同意）即可收集</div>
+        <div data-i18n="credStdWarn"><b>需谨慎</b> — 非法定敏感类别，但有歧视风险，仅限必要阶段收集、不用于自动化淘汰</div>
+        <div data-i18n="credStdRestrict"><b>受限敏感</b> — 法定敏感个人信息，需单独同意 + DPIA评估 + 增强安全措施</div>
+        <div data-i18n="credStdForbid"><b>已禁止</b> — 法律明确禁止用于招聘场景，无合规绕行路径</div>
+      </div>
+
+      <h4 data-i18n="credTierH">各法域数据的核实程度（诚实分级）</h4>
+      <div data-i18n="credTierBody">不同法域数据的核实颗粒度不完全一致，具体分四档：<br>
+      <b>① 逐字段单独核实</b>：中国、新加坡、日本、韩国、越南、印尼、泰国、马来西亚、菲律宾、欧盟(通用)、英国、沙特、阿联酋，共13个法域。<br>
+      <b>② 法律上与欧盟同一份条文</b>：德国、法国、荷兰、瑞典、罗马尼亚、匈牙利、奥地利共7个法域——GDPR是欧盟条例（Regulation），在成员国直接统一适用，第9条特殊类别个人数据的定义对这7国和"欧盟"是同一份法条，不是估算。<br>
+      <b>③ 已查证具体法条、但未逐字段核实</b>：澳门（个人资料保护法第7条）、瑞士（revFADP第5(c)条）、巴西（LGPD第5条第II款）、南非（POPIA第26条）、秘鲁（Ley 29733第2.5条+2025年3月新规扩大至情绪/基因数据）、澳洲（Privacy Act 1988第6条，含犯罪记录）、香港（PDPO本身无法定敏感类别，依赖私隐专员实务守则单独规范身份证号/生物识别等）、美国（以加州CCPA/CPRA第1798.140(ae)条为代表标准，逐项核对过清单——身份证号/社保号、种族、宗教、工会会员、性取向、健康、基因、生物识别、金融账户、精确定位均为CCPA明确列出的敏感类别；犯罪记录、薪酬CCPA未列入，依据另有专项法律单独判断）、墨西哥（新法2025年3月21日生效，第2条第VI款，条文概念与旧法基本一致，大部分规定沿用原框架）——这几个法域的判断依据已核对官方条文或权威指引，与本工具的分类判断基本一致，但字段颗粒度的核实深度仍低于第①档。<br>
+      <b>④ 采用归类估算，尚待逐条核实</b>：俄罗斯、缅甸、老挝——这几个法域的判断依据是监管模式归类或已查证的整体框架，尚未做到与①同等的逐字段核实。</div>
+
+      <h4 data-i18n="credLimitsH">这份报告不能替代什么</h4>
+      <div data-i18n="credLimits">本工具基于公开法规信息整理，不构成正式法律意见；各国法规持续变动（尤其越南、沙特、美国各州、墨西哥），建议签约或大规模收集前由合格律师复核。</div>
+
+      <h4 data-i18n="credKnownH">局限与已知问题</h4>
+      <div data-i18n="credKnown">关键词库每字段覆盖约8-15个常见中英文表述，遇到非常规或生僻措辞仍可能漏检；暂不支持识别中英文以外语言的材料；PDF扫描件（无文字层）暂不支持提取；美国以加州CCPA/CPRA为代表标准，其他州的隐私立法存在差异，实际以候选人所在州的法律为准。</div>
+    </div>
+  </details>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span><span data-i18n="step1Title">选择目标市场</span></div>
+    <div class="step-desc" data-i18n="step1Desc">可多选，按区域分组，共32个法域</div>
+    <div id="marketGroups"></div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span><span data-i18n="step2Title">提供材料</span></div>
+    <div class="step-desc" data-i18n="step2Desc">粘贴文字，或上传 Word / PDF 文件</div>
+    <div class="modeToggle">
+      <button class="modeBtn active" id="modeText" onclick="setMode('text')" data-i18n="modeText">粘贴文字</button>
+      <button class="modeBtn" id="modeFile" onclick="setMode('file')" data-i18n="modeFile">上传文件</button>
+    </div>
+    <div class="inputArea">
+      <textarea id="pasteBox" data-i18n-placeholder="pastePlaceholder" placeholder="例如：候选人申请表需填写姓名、性别、出生日期、身份证号、婚姻状况、期望薪资、健康状况、是否有犯罪记录……"></textarea>
+      <label class="filebox" id="fileBox" style="display:none;">
+        <input type="file" id="fileInput" accept=".docx,.pdf" multiple onchange="handleFiles(event)">
+        <div id="fileBoxText" data-i18n="fileBoxText">点击选择一个或多个 .docx / .pdf 文件（支持批量上传），或拖拽到此处</div>
+      </label>
+      <div class="fileStatus" id="fileStatus"></div>
+      <div id="fileList"></div>
+      <div class="text-preview" id="textPreview" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="generate" id="genBtn" disabled onclick="generateReport()" data-i18n="genBtn">分析材料并生成体检报告</button>
+  </div>
+
+  <div id="report">
+    <details class="source-panel" id="sourcePanel">
+      <summary data-i18n="sourceSummary">本次分析依据的材料内容 — 展开核对是否是你上传/粘贴的内容</summary>
+      <div class="src-body" id="sourceBody"></div>
+    </details>
+    <div class="report-toolbar">
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background:var(--pass-fg)"></span><span data-i18n="lvlPass">可收集</span></div>
+        <div class="legend-item"><span class="dot" style="background:var(--warn-fg)"></span><span data-i18n="lvlWarn">需谨慎</span></div>
+        <div class="legend-item"><span class="dot" style="background:var(--restrict-fg)"></span><span data-i18n="lvlRestrict">受限敏感</span></div>
+        <div class="legend-item"><span class="dot" style="background:var(--forbid-fg)"></span><span data-i18n="lvlForbid">已禁止</span></div>
+        <div class="legend-item"><span class="dot" style="background:var(--text-muted)"></span><span data-i18n="lvlNolaw">暂无专项立法</span></div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="pdfBtn no-print" onclick="generateDPIA()" data-i18n="dpiaBtn" data-i18n-title="dpiaBtnTitle" title="生成网页版预览，并自动下载Word文档">生成DPIA起草文档（含Word下载）</button>
+        <button class="pdfBtn no-print" onclick="exportPDF()" data-i18n="pdfBtn">导出PDF（含水印）</button>
+      </div>
+    </div>
+    <div id="fieldCards" style="position:relative;"></div>
+    <div id="dpiaSection" style="display:none; position:relative; margin-top:24px;"></div>
+  </div>
+
+  <div class="footer"><div data-i18n="footer">合规体检站 v4.1 · 最后更新 2026-10-26 · 数据源自出海招聘合规部署指南 · 非正式合规工具，不构成法律意见，正式使用前请由合格律师复核 · Designed &amp; built by Henry Hu</div><div class="translation-note" id="translationNote" style="display:none;"></div></div>
+</div>
+
+<script>
+// ================= 多语言（i18n）框架 =================
+// 设计：字段名、市场代码等内部标识一律保持中文/代码不变（关键词识别、规则判断都依赖它们），
+// 只在"显示给用户"的那一刻翻译。静态文案的中文原文在页面加载时从HTML里读取，无需重复维护。
+const L10N = {};
+L10N["zh-CN"] = {
+  label: "简体中文",
+  ui: {
+    pageTitle: "合规体检站 · 跨境招聘材料合规检测",
+    metaCoverage: "覆盖：{m}法域 · {f}类字段",
+    lvlPass: "可收集", lvlWarn: "需谨慎", lvlRestrict: "受限敏感", lvlForbid: "已禁止", lvlNolaw: "暂无专项立法",
+    translationNote: "",
+    unsupportedFile: "暂不支持该文件格式，请上传 .docx 或 .pdf",
+    parsing: "正在解析 {n} 个文件…",
+    uploadedSummary: "已上传 {n} 个文件，共提取 {chars} 字，可以生成报告了",
+    parseFailed: "解析失败：{err}",
+    fewChars: "⚠ 仅提取到{n}字，可能是扫描件",
+    extracted: "已提取{n}字",
+    remove: "移除",
+    manualTag: "手动添加",
+    matchedKw: "命中关键词：\"{kw}\"",
+    nolawAction: "{m}暂无专门的个人信息分级立法，建议参照GDPR等成熟框架从严处理\"{f}\"，收集前单独取得候选人明确同意。",
+    legalBasis: "法律依据：",
+    actPass: "在{m}可正常收集\"{f}\"，建议在隐私政策中说明收集目的。",
+    actWarn: "在{m}，\"{f}\"建议仅在必要环节收集（如仅入职阶段而非初筛阶段），不用于自动化筛选/淘汰决策，并在隐私政策中单独说明。",
+    actRestrict: "在{m}，\"{f}\"需要：候选人单独明确同意（不能与其他条款一并勾选）、完成DPIA评估、采取加密存储等增强安全措施。",
+    actForbid: "在{m}，\"{f}\"已被明确禁止用于招聘场景，无合规绕行路径，需从表单/流程中直接删除该字段收集，产品层面做区域化屏蔽。",
+    customTag: "自定义字段",
+    customNote: "该字段不在工具的32法域分类库中，无法自动判断合规状态。建议对照性质相近的已知字段（如同属敏感属性/健康信息类）人工评估，或直接咨询法务确认后再收集。",
+    addFromLib: "从字段库添加",
+    allCovered: "已覆盖全部{n}类已知字段",
+    missingQ: "材料里还有没识别到的字段？",
+    customPlaceholder: "字段库里没有？在这里手动输入字段名称",
+    addCustom: "添加自定义字段",
+    watermark: "仅作参考 · 非法律意见",
+    pastedText: "粘贴文字",
+    uploadedParse: "上传文件解析",
+    docChars: "（{n}字）",
+    empty: "（空）",
+    srcMulti: "本次分析依据：{docs}份材料 · 共{chars}字 · 合计识别到{matched}处字段（含手动添加{manual}处、自定义{custom}处）、{risk}项需关注 — 展开核对原始内容",
+    srcSingle: "本次分析依据：{src} · 共{chars}字 · 识别到{matched}个字段{extra} — 展开核对原始内容",
+    srcSingleExtra: "（含手动添加{manual}个、自定义{custom}个）",
+    manualSection: "手动添加的字段",
+    autoSection: "自动识别的字段",
+    emptyDoc: "未能从材料中识别出已知字段关键词，试试更具体地描述收集的字段名称，或在下方手动添加。",
+    noMaterial: "没有可分析的材料，请先粘贴文字或上传文件。",
+    batchTitle: "批量汇总",
+    batchBody: "<b>{docs}</b> 份材料，合计识别到 <b>{matched}</b> 处字段（含手动添加 <b>{manual}</b> 处、自定义 <b>{custom}</b> 处），其中 <b>{risk}</b> 项在所选市场下需要关注（需谨慎/受限敏感/已禁止/暂无专项立法）。各文件明细见下方。",
+    perDocRisk: "{name} — 识别到{n}个字段，{risk}项需关注",
+    perDocOk: "{name} — 识别到{n}个字段，均可正常收集",
+    legalTooMany: "触发市场较多（{n}个），法律依据详见第2节完整清单",
+    listSep: "、", legalSep: "；", colon: "：", dash: " —— ",
+    dpiaNone: "本次报告所选市场下，未识别到任何\"受限敏感\"级别的字段，暂不需要生成DPIA。",
+    dpiaIntroLabel: "DPIA的目的与价值：",
+    dpiaIntro: "DPIA由处理个人信息的公司自行评估、自行留存，不需要提交监管机构审批，只有评估后剩余风险依然很高时才需要事先咨询监管机构。它的作用有三点——一是在收集数据前先想清楚必要性与风险，而不是出问题后再补救；二是留痕自证，一旦发生投诉、数据泄露或监管抽查，DPIA是证明公司已尽合理注意义务的关键证据；三是作为内部决策依据，若评估发现风险确实过高且难以缓解，公司应据此调整或放弃相关处理活动。",
+    dpiaH0: "0. 文档基本信息",
+    dpiaFill0: "处理活动名称 · 编制人 · 编制日期 · DPO/评估团队成员（如设有该岗位，由甲方公司DPO或法务/合规团队牵头）—— 待填写",
+    dpiaH1: "1. 处理活动系统性描述",
+    dpiaFill1: "处理目的 · 数据主体范围 · 数据生命周期（收集→存储→使用→共享→删除）· 支撑处理的技术架构 —— 待填写",
+    dpiaH2: "2. 涉及法域与适用依据",
+    dpiaDesc2: "以下为本次报告所选择的目标市场及对应法律依据（自动带入）：",
+    dpiaH3: "3. 受限敏感字段总览表",
+    dpiaDesc3: "以下字段在对应市场被判定为\"受限敏感\"级别，均需纳入本次DPIA评估范围（自动汇总自本次报告，不逐条展开为独立段落）：",
+    dpiaDesc3Word: "以下字段在对应市场被判定为\"受限敏感\"级别，均需纳入本次DPIA评估范围：",
+    thField: "字段", thMarkets: "触发市场", thLegal: "法律依据",
+    dpiaH4: "4. 通用合规要求（适用于上表全部条目）",
+    dpiaReq1: "候选人需单独明确同意，不得与其他条款一并勾选",
+    dpiaReq2: "完成本DPIA评估并留存记录，作为合规依据",
+    dpiaReq3: "采取加密存储，访问权限限制在业务必要岗位",
+    dpiaH5: "5. 特殊例外事项",
+    dpiaNoExceptions: "本次涉及的市场暂无超出通用要求的特殊例外事项。",
+    dpiaH6: "6. 数据主体权利保障安排",
+    dpiaFill6: "候选人如何行使查询/更正/删除个人信息及撤回同意的权利，具体操作流程和响应时限 —— 待填写",
+    dpiaH7: "7. 咨询记录与批准",
+    dpiaFill7: "DPO/外部法律顾问意见 · 剩余风险是否可接受 · 批准人签字与日期 · 下次复核日期 —— 待填写",
+    docTitle: "DPIA评估起草文档",
+    docSubtitle: "个人信息保护影响评估（草稿）",
+    docNote: "本文档由「合规体检站」基于体检报告自动生成初稿，正式评估需由甲方公司DPO（数据保护官，如设有该岗位）或法务/合规团队牵头审核完成，标注为\"待填写\"的部分需由其自行补充；本文档不构成正式法律意见。",
+    docFooter: "本文档基于公开法规信息整理，不构成正式法律意见；由合规体检站生成，仅供参考。",
+    fileDpia: "DPIA评估起草文档_{date}",
+    fileReport: "合规体检报告_{date}",
+  },
+};
+L10N.en = {
+  label: "English",
+  ui: {
+    pageTitle: "Compliance Checkup · Cross-border Recruitment Data Compliance Check",
+    eyebrow: "Compliance Checkup",
+    h1: "Cross-border Recruitment Data Compliance Check",
+    sub: "Paste in a real form field list, offer template or candidate application form (or upload files). The tool automatically identifies which data fields are collected and tells you, field by field, whether each can be collected in your target markets and what to change.",
+    metaCutoff: "Data as of: 2026-07-31",
+    metaCoverage: "Coverage: {m} jurisdictions · {f} field types",
+    metaMethod: "Detection: keyword matching (not semantic understanding)",
+    credSummary: "What is this report based on, and why can you trust it? — Expand to see methodology and limitations",
+    credSourcesH: "Sources of legal data",
+    credSources: "Covers 32 jurisdictions across 10 regions: Greater China, Southeast Asia, Northeast Asia, Oceania, the EU, Other Europe, North America, Latin America, the Middle East and Africa. The specific legal basis is cited beneath each recommendation.",
+    credStdH: "Classification criteria (recruitment-specific)",
+    credStdPass: "<b>Allowed</b> — Ordinary personal data; may be collected with a lawful basis (contractual necessity / notice and consent)",
+    credStdWarn: "<b>Use caution</b> — Not a statutory sensitive category, but carries discrimination risk; collect only at the necessary stage and do not use for automated rejection",
+    credStdRestrict: "<b>Restricted (sensitive)</b> — Statutory sensitive personal data; requires separate consent + a DPIA + enhanced security measures",
+    credStdForbid: "<b>Prohibited</b> — Expressly prohibited by law in recruitment; no compliant workaround",
+    credTierH: "How thoroughly each jurisdiction has been verified (honest grading)",
+    credTierBody: "Verification depth is not uniform across jurisdictions. There are four tiers:<br><b>① Verified field by field</b>: China, Singapore, Japan, South Korea, Vietnam, Indonesia, Thailand, Malaysia, the Philippines, the EU (general), the UK, Saudi Arabia and the UAE — 13 jurisdictions in total.<br><b>② Legally the same text as the EU</b>: Germany, France, the Netherlands, Sweden, Romania, Hungary and Austria — 7 jurisdictions. The GDPR is an EU Regulation that applies directly and uniformly in member states, so the Art. 9 definition of special categories of personal data is the very same provision for these 7 countries as for the \"EU\" — this is not an estimate.<br><b>③ Specific statutory provisions checked, but not verified field by field</b>: Macao (Personal Data Protection Act, Art. 7), Switzerland (revFADP Art. 5(c)), Brazil (LGPD Art. 5(II)), South Africa (POPIA s.26), Peru (Ley 29733 Art. 2.5 + March 2025 regulation extending to emotional/genetic data), Australia (Privacy Act 1988 s.6, incl. criminal records), Hong Kong (the PDPO itself has no statutory sensitive categories; ID numbers, biometrics, etc. are addressed separately through PCPD codes of practice), the United States (California's CCPA/CPRA §1798.140(ae) used as the representative standard and checked item by item — ID/Social Security numbers, race, religion, union membership, sexual orientation, health, genetic data, biometrics, financial accounts and precise geolocation are all sensitive categories expressly listed in the CCPA; criminal records and pay are not listed in the CCPA and are assessed under separate dedicated laws), and Mexico (new law in force on 21 March 2025, Art. 2(VI); concepts largely consistent with the former law, with most provisions following the prior framework). For these jurisdictions the basis has been checked against official texts or authoritative guidance and is broadly consistent with this tool's classification, but field-level verification is less deep than tier ①.<br><b>④ Estimated by classification, pending item-by-item verification</b>: Russia, Myanmar and Laos. The assessment for these jurisdictions is based on regulatory-model classification or a verified overall framework, and has not yet reached tier-① field-by-field verification.",
+    credLimitsH: "What this report cannot replace",
+    credLimits: "This tool is compiled from publicly available regulatory information and does not constitute formal legal advice. Laws keep changing (especially in Vietnam, Saudi Arabia, US states and Mexico); have a qualified lawyer review before signing contracts or collecting data at scale.",
+    credKnownH: "Limitations and known issues",
+    credKnown: "The keyword library covers roughly 8–15 common Chinese and English expressions per field, so unusual or uncommon wording may still be missed; materials in languages other than Chinese and English cannot be recognised yet; scanned PDFs (without a text layer) are not supported; for the US, California's CCPA/CPRA is used as the representative standard — privacy laws in other states differ, and the law of the candidate's state prevails.",
+    step1Title: "Select target markets",
+    step1Desc: "Multiple selection, grouped by region — 32 jurisdictions in total",
+    step2Title: "Provide materials",
+    step2Desc: "Paste text, or upload Word / PDF files",
+    modeText: "Paste text",
+    modeFile: "Upload files",
+    pastePlaceholder: "e.g. The candidate application form requires name, gender, date of birth, ID number, marital status, expected salary, health condition, criminal record…",
+    fileBoxText: "Click to select one or more .docx / .pdf files (batch upload supported), or drag them here",
+    genBtn: "Analyse materials and generate report",
+    sourceSummary: "Materials used for this analysis — expand to check they match what you uploaded/pasted",
+    lvlPass: "Allowed", lvlWarn: "Use caution", lvlRestrict: "Restricted (sensitive)", lvlForbid: "Prohibited", lvlNolaw: "No specific law",
+    dpiaBtn: "Generate DPIA draft (with Word download)",
+    dpiaBtnTitle: "Generates a web preview and automatically downloads a Word document",
+    pdfBtn: "Export PDF (watermarked)",
+    footer: "Compliance Checkup v4.1 · Last updated 2026-10-26 · Data drawn from the Overseas Recruitment Compliance Deployment Guide · Informal compliance tool, not legal advice; have a qualified lawyer review before formal use · Designed &amp; built by Henry Hu",
+    translationNote: "This English version is provided for convenience. In case of any discrepancy, the Chinese version prevails.",
+
+    unsupportedFile: "Unsupported file format. Please upload .docx or .pdf",
+    parsing: "Parsing {n} file(s)…",
+    uploadedSummary: "{n} file(s) uploaded, {chars} characters extracted — ready to generate the report",
+    parseFailed: "Parsing failed: {err}",
+    fewChars: "⚠ Only {n} characters extracted — this may be a scanned document",
+    extracted: "{n} characters extracted",
+    remove: "Remove",
+    manualTag: "Added manually",
+    matchedKw: "Matched keyword: “{kw}”",
+    nolawAction: "{m} has no dedicated tiered personal data legislation. Handle “{f}” strictly by reference to mature frameworks such as the GDPR, and obtain the candidate's separate explicit consent before collection.",
+    legalBasis: "Legal basis: ",
+    actPass: "In {m}, “{f}” may be collected normally; state the purpose of collection in your privacy notice.",
+    actWarn: "In {m}, “{f}” should be collected only at the necessary stage (e.g. at onboarding rather than initial screening), must not be used for automated screening/rejection decisions, and should be explained separately in your privacy notice.",
+    actRestrict: "In {m}, “{f}” requires: the candidate's separate explicit consent (not bundled with other terms), a completed DPIA, and enhanced security measures such as encrypted storage.",
+    actForbid: "In {m}, “{f}” is expressly prohibited in recruitment, with no compliant workaround. Remove this field from forms/processes and block it by region at the product level.",
+    customTag: "Custom field",
+    customNote: "This field is not in the tool's 32-jurisdiction classification library, so its compliance status cannot be determined automatically. Assess it manually against similar known fields (e.g. sensitive attributes or health information), or confirm with your legal team before collecting it.",
+    addFromLib: "Add from field library",
+    allCovered: "All {n} known field types are already covered",
+    missingQ: "Any fields in your materials that weren't detected?",
+    customPlaceholder: "Not in the library? Enter a field name here",
+    addCustom: "Add custom field",
+    watermark: "For reference only · Not legal advice",
+    pastedText: "Pasted text",
+    uploadedParse: "Parsed uploads",
+    docChars: " ({n} chars)",
+    empty: "(empty)",
+    srcMulti: "Basis of this analysis: {docs} documents · {chars} characters in total · {matched} field occurrences detected (incl. {manual} added manually, {custom} custom), {risk} items need attention — expand to check the original content",
+    srcSingle: "Basis of this analysis: {src} · {chars} characters · {matched} fields detected{extra} — expand to check the original content",
+    srcSingleExtra: " (incl. {manual} added manually, {custom} custom)",
+    manualSection: "Fields added manually",
+    autoSection: "Automatically detected fields",
+    emptyDoc: "No known field keywords were detected in the materials. Try describing the collected fields more specifically, or add them manually below.",
+    noMaterial: "Nothing to analyse. Please paste text or upload files first.",
+    batchTitle: "Batch summary",
+    batchBody: "<b>{docs}</b> documents, <b>{matched}</b> field occurrences detected in total (incl. <b>{manual}</b> added manually, <b>{custom}</b> custom), of which <b>{risk}</b> items need attention in the selected markets (use caution / restricted / prohibited / no specific law). See per-file details below.",
+    perDocRisk: "{name} — {n} fields detected, {risk} need attention",
+    perDocOk: "{name} — {n} fields detected, all may be collected normally",
+    legalTooMany: "Many markets triggered ({n}); see the full list of legal bases in Section 2",
+    listSep: ", ", legalSep: "; ", colon: ": ", dash: " — ",
+    dpiaNone: "No “Restricted (sensitive)” fields were detected for the selected markets, so a DPIA is not needed for now.",
+    dpiaIntroLabel: "Purpose and value of a DPIA: ",
+    dpiaIntro: "A DPIA is conducted and retained by the company processing the personal data itself; it does not need to be submitted to a regulator for approval, and prior consultation with the regulator is only required if high residual risk remains after the assessment. It serves three purposes: first, to think through necessity and risk before collecting data, rather than fixing problems afterwards; second, to create a record of accountability — in the event of a complaint, data breach or regulatory inspection, the DPIA is key evidence that the company exercised reasonable care; third, as a basis for internal decisions — if the assessment finds the risk genuinely too high and hard to mitigate, the company should adjust or abandon the processing activity accordingly.",
+    dpiaH0: "0. Document information",
+    dpiaFill0: "Processing activity name · Author · Date · DPO / assessment team members (where such a role exists, led by the client company's DPO or legal/compliance team) — to be completed",
+    dpiaH1: "1. Systematic description of the processing",
+    dpiaFill1: "Purposes of processing · Scope of data subjects · Data lifecycle (collection → storage → use → sharing → deletion) · Supporting technical architecture — to be completed",
+    dpiaH2: "2. Jurisdictions involved and applicable law",
+    dpiaDesc2: "The target markets selected in this report and their corresponding legal bases (filled in automatically):",
+    dpiaH3: "3. Overview of restricted (sensitive) fields",
+    dpiaDesc3: "The following fields are classified as “Restricted (sensitive)” in the corresponding markets and must all be included in the scope of this DPIA (summarised automatically from this report rather than expanded into separate sections):",
+    dpiaDesc3Word: "The following fields are classified as “Restricted (sensitive)” in the corresponding markets and must all be included in the scope of this DPIA:",
+    thField: "Field", thMarkets: "Markets triggered", thLegal: "Legal basis",
+    dpiaH4: "4. General compliance requirements (apply to all items above)",
+    dpiaReq1: "Obtain the candidate's separate explicit consent, not bundled with other terms",
+    dpiaReq2: "Complete this DPIA and retain records as evidence of compliance",
+    dpiaReq3: "Use encrypted storage and restrict access to roles with a business need",
+    dpiaH5: "5. Special exceptions",
+    dpiaNoExceptions: "The markets involved have no special exceptions beyond the general requirements.",
+    dpiaH6: "6. Arrangements for data subject rights",
+    dpiaFill6: "How candidates exercise their rights to access/correct/delete personal data and withdraw consent, with specific procedures and response times — to be completed",
+    dpiaH7: "7. Consultation record and approval",
+    dpiaFill7: "Opinion of DPO / external legal counsel · Whether residual risk is acceptable · Approver signature and date · Next review date — to be completed",
+    docTitle: "DPIA Draft",
+    docSubtitle: "Data Protection Impact Assessment (Draft)",
+    docNote: "This document is a first draft generated automatically by Compliance Checkup from the compliance report. The formal assessment must be reviewed and completed under the lead of the client company's DPO (Data Protection Officer, where such a role exists) or legal/compliance team, who must fill in the sections marked “to be completed”. This document does not constitute formal legal advice.",
+    docFooter: "This document is compiled from publicly available regulatory information and does not constitute formal legal advice. Generated by Compliance Checkup for reference only.",
+    fileDpia: "DPIA_Draft_{date}",
+    fileReport: "Compliance_Report_{date}",
+  },
+  regions: { "大中华区":"Greater China","东南亚":"Southeast Asia","东北亚":"Northeast Asia","大洋洲":"Oceania","欧盟":"European Union","欧洲其他":"Other Europe","北美":"North America","拉美":"Latin America","中东":"Middle East","非洲":"Africa" },
+  markets: { CN:"China",HK:"Hong Kong",MO:"Macao",SG:"Singapore",VN:"Vietnam",ID:"Indonesia",TH:"Thailand",MY:"Malaysia",PH:"Philippines",MM:"Myanmar",LA:"Laos",JP:"Japan",KR:"South Korea",AU:"Australia",EU:"EU (general)",DE:"Germany",FR:"France",NL:"Netherlands",SE:"Sweden",RO:"Romania",HU:"Hungary",AT:"Austria",UK:"United Kingdom",CH:"Switzerland",RU:"Russia",US:"United States",MX:"Mexico",BR:"Brazil",PE:"Peru",SA:"Saudi Arabia",AE:"UAE",ZA:"South Africa" },
+  cats: { "基础身份信息":"Basic identity","联系方式":"Contact details","职场信息":"Professional information","敏感属性":"Sensitive attributes","健康与生物识别":"Health & biometrics","安全与法律相关":"Security & legal","AI衍生数据":"AI-derived data" },
+  fields: { "姓名":"Name","性别":"Gender","出生日期/年龄":"Date of birth / Age","国籍":"Nationality","身份证号/护照号":"ID / Passport number","婚姻状况":"Marital status","手机号":"Mobile number","邮箱":"Email","住址/地址":"Home address","工作履历":"Work history","学历/教育背景":"Education","薪酬/薪资信息":"Salary / Compensation","职业技能/证书":"Skills / Certifications","照片/头像":"Photo","种族/民族":"Race / Ethnicity","宗教信仰":"Religion","政治观点":"Political opinions","工会会员":"Trade union membership","性取向":"Sexual orientation","健康/医疗状况":"Health / Medical condition","残疾状况":"Disability","基因数据":"Genetic data","生物识别(指纹/面部)":"Biometrics (fingerprint / face)","犯罪记录":"Criminal record","金融/银行信息":"Financial / Bank information","社保号/税号":"Social security / Tax number","定位/行踪轨迹":"Location / Movement tracking","面试视频录像":"Interview video recordings","情绪识别数据":"Emotion recognition data","AI评估评分":"AI assessment scores" },
+  legal: {
+    CN:"Personal Information Protection Law (PIPL), Art. 28", SG:"PDPA 2012 (2024 amendments)", JP:"APPI (Act on the Protection of Personal Information)",
+    KR:"PIPA (Personal Information Protection Act, amended 2023)", VN:"PDP Law 2025 + Decree 356", ID:"PDP Law (Law No. 27 of 2022)",
+    TH:"PDPA 2022", MY:"PDPA 2010 (2024 amendments)", PH:"DPA 2012",
+    EU:"GDPR Art. 9 (special categories of personal data)", UK:"UK GDPR + DPA 2018", SA:"PDPL (2023 amended version)", AE:"Federal PDPL (Decree-Law No. 45/2021)",
+    HK:"Personal Data (Privacy) Ordinance (PDPO), Cap. 486 (no statutory sensitive data categories; relies on PCPD codes of practice/guidance)", MO:"Personal Data Protection Act (Law No. 8/2005), Art. 7 (special categories of personal data)",
+    AU:"Privacy Act 1988 (Cth), s.6 (definition of sensitive information, incl. criminal records)", MM:"No dedicated data protection law (certain provisions of the Electronic Transactions Law apply)", LA:"No dedicated data protection law",
+    DE:"BDSG + GDPR", FR:"Loi Informatique et Libertés + GDPR", NL:"UAVG + GDPR", SE:"Dataskyddslagen + GDPR",
+    RO:"Law No. 190/2018 + GDPR", HU:"Infotv. + GDPR", AT:"Datenschutzgesetz (DSG) + GDPR", CH:"revFADP Art. 5(c) (sensitive personal data; in force since September 2023)",
+    US:"California CCPA/CPRA (Civil Code §1798.140(ae)) used as the representative standard — California is the bellwether of US privacy legislation, and since 2023 employee/job applicant data is no longer exempt from the CCPA, making it a better reference than the many state laws that exclude recruitment; fields not listed as sensitive under the CCPA, such as criminal records and pay, are assessed separately under dedicated federal/state laws (EEOC guidance, state salary history bans)",
+    MX:"New Personal Data Protection Law (published 20 March 2025 / in force 21 March 2025), Art. 2(VI) (definition of sensitive personal data; concepts largely consistent with the former law, with the enumerated list following the prior framework)", BR:"General Data Protection Law (LGPD), Art. 5(II)", PE:"Personal Data Protection Law (Ley 29733), Art. 2(5) + March 2025 regulation (DS 016-2024-JUS) extending to emotional and genetic data",
+    ZA:"Protection of Personal Information Act (POPIA), s.26", RU:"Federal Law on Personal Data (152-FZ), Arts. 10–11",
+  },
+  specialNotes: {
+    RU: "Law 242-FZ additionally requires that candidate data be “initially stored” within Russia; separate consent alone is not sufficient for compliance, and a data localisation solution must also be assessed. Enforcement is tightening in 2026 (including penalties imposed on foreign companies).",
+  },
+  fieldNotes: {
+    "犯罪记录": { EU:"The GDPR does not place criminal records among the Art. 9 statutory special categories, but Art. 10 requires official authority or a justification of necessity, so they should still be handled with care in practice.", UK:"As for the EU — official authority or a justification of necessity is required." },
+    "情绪识别数据": { EU:"Art. 5 of the EU AI Act has expressly prohibited emotion recognition AI in the workplace since February 2025, with no transition period; violations can be fined up to 7% of global turnover.", UK:"Follow the EU AI Act standard; its use in UK recruitment is likewise not recommended." },
+  },
+};
+
+
+L10N["zh-HK"] = {
+  label: "繁體中文（香港）",
+  ui: {
+    pageTitle: "合規體檢站 · 跨境招聘資料合規檢測",
+    eyebrow: "合規體檢站",
+    h1: "跨境招聘資料合規體檢",
+    sub: "把一份真實的表格欄位清單、聘書範本或求職申請表貼進來（或上載檔案），工具會自動識別當中收集了哪些資料欄位，並逐項告訴你在目標市場能否收集、應如何修改。",
+    metaCutoff: "資料截至：2026-07-31",
+    metaCoverage: "覆蓋：{m}個法域 · {f}類欄位",
+    metaMethod: "識別方式：關鍵詞比對（非語義理解）",
+    credSummary: "這份報告的依據是甚麼？為何可信 — 展開查看方法論與局限",
+    credSourcesH: "法規資料來源",
+    credSources: "覆蓋大中華區、東南亞、東北亞、大洋洲、歐盟、歐洲其他地區、北美、拉丁美洲、中東及非洲共10個區域、32個法域，具體法律依據見每項建議下方標註。",
+    credStdH: "分類判斷標準（招聘場景專用）",
+    credStdPass: "<b>可收集</b> — 一般個人資料，具備合法基礎（合約必要／告知同意）即可收集",
+    credStdWarn: "<b>需謹慎</b> — 非法定敏感類別，但有歧視風險，僅限必要階段收集，不得用於自動化淘汰",
+    credStdRestrict: "<b>受限敏感</b> — 法定敏感個人資料，須單獨同意 + DPIA評估 + 加強保安措施",
+    credStdForbid: "<b>已禁止</b> — 法律明確禁止用於招聘場景，沒有合規的變通方法",
+    credTierH: "各法域資料的核實程度（誠實分級）",
+    credTierBody: "不同法域資料的核實深度並不完全一致，具體分為四級：<br><b>① 逐欄位單獨核實</b>：中國內地、新加坡、日本、韓國、越南、印尼、泰國、馬來西亞、菲律賓、歐盟（通用）、英國、沙特阿拉伯、阿聯酋，共13個法域。<br><b>② 法律上與歐盟屬同一份條文</b>：德國、法國、荷蘭、瑞典、羅馬尼亞、匈牙利、奧地利共7個法域——GDPR是歐盟規例（Regulation），在成員國直接統一適用，第9條特殊類別個人資料的定義對這7國和「歐盟」是同一條文，並非估算。<br><b>③ 已查證具體法律條文，但未逐欄位核實</b>：澳門（《個人資料保護法》第7條）、瑞士（revFADP第5(c)條）、巴西（LGPD第5條第II款）、南非（POPIA第26條）、秘魯（Ley 29733第2.5條 + 2025年3月新規將範圍擴大至情緒／基因資料）、澳洲（《1988年私隱法》第6條，包括刑事紀錄）、香港（《私隱條例》本身沒有法定敏感類別，依賴私隱專員的實務守則另行規範身份證號碼／生物辨識資料等）、美國（以加州CCPA/CPRA第1798.140(ae)條為代表標準，並已逐項核對清單——身份證號碼／社會保障號碼、種族、宗教、工會會籍、性傾向、健康、基因、生物辨識、金融帳戶及精確位置均為CCPA明確列出的敏感類別；刑事紀錄、薪酬未列入CCPA，另依專項法律判斷）、墨西哥（新法於2025年3月21日生效，第2條第VI款，概念與舊法基本一致，大部分規定沿用原有框架）——上述法域的判斷依據已核對官方條文或權威指引，與本工具的分類判斷大致一致，但欄位層面的核實深度仍低於第①級。<br><b>④ 採用歸類估算，尚待逐項核實</b>：俄羅斯、緬甸、老撾——這些法域的判斷依據是監管模式歸類或已查證的整體框架，尚未達到第①級的逐欄位核實。",
+    credLimitsH: "這份報告不能取代甚麼",
+    credLimits: "本工具根據公開法規資料整理，不構成正式法律意見；各地法規持續變動（尤其越南、沙特阿拉伯、美國各州及墨西哥），建議在簽約或大規模收集資料前由合資格律師覆核。",
+    credKnownH: "局限與已知問題",
+    credKnown: "關鍵詞庫每個欄位約涵蓋8至15個常見中英文表述，遇到非常規或冷僻措辭仍可能漏檢；暫不支援識別中英文以外語言的資料；掃描版PDF（沒有文字層）暫不支援擷取；美國以加州CCPA/CPRA為代表標準，其他州的私隱立法存在差異，實際以求職者所在州的法律為準。",
+    step1Title: "選擇目標市場",
+    step1Desc: "可多選，按區域分組，共32個法域",
+    step2Title: "提供資料",
+    step2Desc: "貼上文字，或上載 Word / PDF 檔案",
+    modeText: "貼上文字",
+    modeFile: "上載檔案",
+    pastePlaceholder: "例如：求職申請表需填寫姓名、性別、出生日期、身份證號碼、婚姻狀況、期望薪酬、健康狀況、有否刑事紀錄……",
+    fileBoxText: "按此選擇一個或多個 .docx / .pdf 檔案（支援批量上載），或拖放至此處",
+    genBtn: "分析資料並產生體檢報告",
+    sourceSummary: "本次分析所依據的資料內容 — 展開核對是否為你上載／貼上的內容",
+    lvlPass: "可收集", lvlWarn: "需謹慎", lvlRestrict: "受限敏感", lvlForbid: "已禁止", lvlNolaw: "暫無專項立法",
+    dpiaBtn: "產生DPIA草擬文件（含Word下載）",
+    dpiaBtnTitle: "產生網頁版預覽，並自動下載Word文件",
+    pdfBtn: "匯出PDF（含水印）",
+    footer: "合規體檢站 v4.1 · 最後更新 2026-10-26 · 資料來源：出海招聘合規部署指南 · 非正式合規工具，不構成法律意見，正式使用前請由合資格律師覆核 · Designed &amp; built by Henry Hu",
+    translationNote: "本繁體中文版本僅供方便參閱，如有歧義，以簡體中文版本為準。",
+    unsupportedFile: "暫不支援此檔案格式，請上載 .docx 或 .pdf",
+    parsing: "正在解析 {n} 個檔案…",
+    uploadedSummary: "已上載 {n} 個檔案，共擷取 {chars} 字，可以產生報告了",
+    parseFailed: "解析失敗：{err}",
+    fewChars: "⚠ 只擷取到{n}字，可能是掃描版檔案",
+    extracted: "已擷取{n}字",
+    remove: "移除",
+    manualTag: "手動加入",
+    matchedKw: "命中關鍵詞：「{kw}」",
+    nolawAction: "{m}暫無專門的個人資料分級立法，建議參照GDPR等成熟框架從嚴處理「{f}」，收集前另行取得求職者的明確同意。",
+    legalBasis: "法律依據：",
+    actPass: "在{m}可正常收集「{f}」，建議在私隱政策中說明收集目的。",
+    actWarn: "在{m}，「{f}」建議只在必要環節收集（例如只在入職階段而非初步篩選階段），不得用於自動化篩選／淘汰決定，並在私隱政策中另行說明。",
+    actRestrict: "在{m}，「{f}」須符合：求職者單獨明確同意（不可與其他條款一併勾選）、完成DPIA評估、採取加密儲存等加強保安措施。",
+    actForbid: "在{m}，「{f}」已被明確禁止用於招聘場景，沒有合規的變通方法，須從表格／流程中直接刪除此欄位，並在產品層面按地區屏蔽。",
+    customTag: "自訂欄位",
+    customNote: "此欄位不在工具的32法域分類庫中，無法自動判斷合規狀態。建議對照性質相近的已知欄位（例如同屬敏感屬性／健康資料類）人手評估，或直接諮詢法務確認後再收集。",
+    addFromLib: "從欄位庫加入",
+    allCovered: "已涵蓋全部{n}類已知欄位",
+    missingQ: "資料中還有未被識別的欄位？",
+    customPlaceholder: "欄位庫中沒有？在此手動輸入欄位名稱",
+    addCustom: "加入自訂欄位",
+    watermark: "僅供參考 · 非法律意見",
+    pastedText: "貼上的文字",
+    uploadedParse: "上載檔案解析",
+    docChars: "（{n}字）",
+    empty: "（空白）",
+    srcMulti: "本次分析依據：{docs}份資料 · 共{chars}字 · 合共識別到{matched}處欄位（包括手動加入{manual}處、自訂{custom}處），{risk}項需要關注 — 展開核對原始內容",
+    srcSingle: "本次分析依據：{src} · 共{chars}字 · 識別到{matched}個欄位{extra} — 展開核對原始內容",
+    srcSingleExtra: "（包括手動加入{manual}個、自訂{custom}個）",
+    manualSection: "手動加入的欄位",
+    autoSection: "自動識別的欄位",
+    emptyDoc: "未能從資料中識別出已知欄位的關鍵詞，請嘗試更具體地描述所收集的欄位名稱，或在下方手動加入。",
+    noMaterial: "沒有可分析的資料，請先貼上文字或上載檔案。",
+    batchTitle: "批量匯總",
+    batchBody: "<b>{docs}</b> 份資料，合共識別到 <b>{matched}</b> 處欄位（包括手動加入 <b>{manual}</b> 處、自訂 <b>{custom}</b> 處），其中 <b>{risk}</b> 項在所選市場需要關注（需謹慎／受限敏感／已禁止／暫無專項立法）。各檔案明細見下方。",
+    perDocRisk: "{name} — 識別到{n}個欄位，{risk}項需要關注",
+    perDocOk: "{name} — 識別到{n}個欄位，全部可正常收集",
+    legalTooMany: "觸發市場較多（{n}個），法律依據詳見第2節完整清單",
+    listSep: "、", legalSep: "；", colon: "：", dash: " —— ",
+    dpiaNone: "在本次報告所選市場中，未識別到任何「受限敏感」級別的欄位，暫時毋須產生DPIA。",
+    dpiaIntroLabel: "DPIA的目的與價值：",
+    dpiaIntro: "DPIA由處理個人資料的公司自行評估、自行保存，毋須提交監管機構審批，只有在評估後剩餘風險仍然很高時，才須事先諮詢監管機構。它的作用有三點——一是在收集資料前先想清楚必要性與風險，而非出事後才補救；二是留下紀錄自證，一旦出現投訴、資料外洩或監管抽查，DPIA是證明公司已盡合理謹慎責任的關鍵證據；三是作為內部決策依據，若評估發現風險確實過高且難以緩解，公司應據此調整或放棄相關處理活動。",
+    dpiaH0: "0. 文件基本資料",
+    dpiaFill0: "處理活動名稱 · 編製人 · 編製日期 · DPO／評估團隊成員（如設有該職位，由委託公司的DPO或法務／合規團隊牽頭）—— 待填寫",
+    dpiaH1: "1. 處理活動的系統性描述",
+    dpiaFill1: "處理目的 · 資料當事人範圍 · 資料生命周期（收集→儲存→使用→共享→刪除）· 支援處理的技術架構 —— 待填寫",
+    dpiaH2: "2. 涉及法域與適用依據",
+    dpiaDesc2: "以下為本次報告所選擇的目標市場及相應法律依據（自動帶入）：",
+    dpiaH3: "3. 受限敏感欄位總覽表",
+    dpiaDesc3: "以下欄位在相應市場被判定為「受限敏感」級別，均須納入本次DPIA評估範圍（自動匯總自本次報告，不逐項展開為獨立段落）：",
+    dpiaDesc3Word: "以下欄位在相應市場被判定為「受限敏感」級別，均須納入本次DPIA評估範圍：",
+    thField: "欄位", thMarkets: "觸發市場", thLegal: "法律依據",
+    dpiaH4: "4. 通用合規要求（適用於上表全部項目）",
+    dpiaReq1: "求職者須單獨明確同意，不得與其他條款一併勾選",
+    dpiaReq2: "完成本DPIA評估並保存紀錄，作為合規依據",
+    dpiaReq3: "採取加密儲存，存取權限只限業務上有需要的職位",
+    dpiaH5: "5. 特殊例外事項",
+    dpiaNoExceptions: "本次涉及的市場暫無超出通用要求的特殊例外事項。",
+    dpiaH6: "6. 資料當事人權利保障安排",
+    dpiaFill6: "求職者如何行使查閱／更正／刪除個人資料及撤回同意的權利，具體操作流程及回應時限 —— 待填寫",
+    dpiaH7: "7. 諮詢紀錄與批准",
+    dpiaFill7: "DPO／外聘法律顧問意見 · 剩餘風險是否可接受 · 批准人簽署及日期 · 下次覆核日期 —— 待填寫",
+    docTitle: "DPIA評估草擬文件",
+    docSubtitle: "個人資料保障影響評估（草稿）",
+    docNote: "本文件由「合規體檢站」根據體檢報告自動產生初稿，正式評估須由委託公司的DPO（保障資料主任，如設有該職位）或法務／合規團隊牽頭審核完成，標註為「待填寫」的部分須由其自行補充；本文件不構成正式法律意見。",
+    docFooter: "本文件根據公開法規資料整理，不構成正式法律意見；由合規體檢站產生，僅供參考。",
+    fileDpia: "DPIA評估草擬文件_{date}",
+    fileReport: "合規體檢報告_{date}",
+  },
+  regions: { "大中华区":"大中華區","东南亚":"東南亞","东北亚":"東北亞","大洋洲":"大洋洲","欧盟":"歐盟","欧洲其他":"歐洲其他地區","北美":"北美","拉美":"拉丁美洲","中东":"中東","非洲":"非洲" },
+  markets: { CN:"中國內地",HK:"香港",MO:"澳門",SG:"新加坡",VN:"越南",ID:"印尼",TH:"泰國",MY:"馬來西亞",PH:"菲律賓",MM:"緬甸",LA:"老撾",JP:"日本",KR:"韓國",AU:"澳洲",EU:"歐盟（通用）",DE:"德國",FR:"法國",NL:"荷蘭",SE:"瑞典",RO:"羅馬尼亞",HU:"匈牙利",AT:"奧地利",UK:"英國",CH:"瑞士",RU:"俄羅斯",US:"美國",MX:"墨西哥",BR:"巴西",PE:"秘魯",SA:"沙特阿拉伯",AE:"阿聯酋",ZA:"南非" },
+  cats: { "基础身份信息":"基本身份資料","联系方式":"聯絡方式","职场信息":"職場資料","敏感属性":"敏感屬性","健康与生物识别":"健康與生物辨識","安全与法律相关":"保安與法律相關","AI衍生数据":"AI衍生資料" },
+  fields: { "姓名":"姓名","性别":"性別","出生日期/年龄":"出生日期／年齡","国籍":"國籍","身份证号/护照号":"身份證／護照號碼","婚姻状况":"婚姻狀況","手机号":"手提電話號碼","邮箱":"電郵地址","住址/地址":"住址","工作履历":"工作經驗","学历/教育背景":"學歷／教育背景","薪酬/薪资信息":"薪酬資料","职业技能/证书":"專業技能／證書","照片/头像":"相片","种族/民族":"種族／族裔","宗教信仰":"宗教信仰","政治观点":"政治觀點","工会会员":"工會會籍","性取向":"性傾向","健康/医疗状况":"健康／醫療狀況","残疾状况":"殘疾狀況","基因数据":"基因資料","生物识别(指纹/面部)":"生物辨識（指紋／面部）","犯罪记录":"刑事紀錄","金融/银行信息":"財務／銀行資料","社保号/税号":"社會保障號碼／稅務編號","定位/行踪轨迹":"位置／行蹤軌跡","面试视频录像":"面試錄影","情绪识别数据":"情緒辨識資料","AI评估评分":"AI評估評分" },
+  legal: {
+    CN:"《個人信息保護法》(PIPL) 第28條", SG:"PDPA 2012（2024年修訂）", JP:"APPI《個人情報保護法》",
+    KR:"PIPA《個人信息保護法》（2023年修訂）", ID:"PDP法（2022年第27號法律）", MY:"PDPA 2010（2024年修訂）",
+    EU:"GDPR第9條（特殊類別個人資料）", SA:"PDPL 2023年修訂版", AE:"聯邦PDPL（第45/2021號法令）",
+    HK:"《個人資料（私隱）條例》(PDPO) 第486章（沒有法定敏感資料類別，依賴私隱專員實務守則／指引）", MO:"《個人資料保護法》第8/2005號法律第7條（特殊類別個人資料）",
+    AU:"《1988年私隱法》(Cth) 第6條（敏感資料定義，包括刑事紀錄）", MM:"沒有專門的資料保護立法（部分適用《電子交易法》條款）", LA:"沒有專門的資料保護立法",
+    CH:"revFADP第5(c)條（特別敏感個人資料，2023年9月生效）",
+    US:"以加州CCPA/CPRA（《民法典》第1798.140(ae)條）為代表標準——加州是美國私隱立法的風向標，且自2023年起員工／求職者資料已不再獲CCPA豁免，比多數排除招聘場景的州法更適合作為參照；刑事紀錄、薪酬等未被CCPA列為敏感類別的欄位，另依專項聯邦／州法（EEOC指引、各州禁問薪酬歷史法）判斷",
+    MX:"新版《個人資料保護法》（2025年3月20日公布／21日生效）第2條第VI款（敏感個人資料定義，概念與舊法基本一致，具體列舉清單沿用原有框架）", BR:"《通用資料保護法》(LGPD) 第5條第II款", PE:"《個人資料保護法》(Ley 29733) 第2條第5款 + 2025年3月新規 (DS 016-2024-JUS) 擴大至情緒與基因資料",
+    ZA:"《個人資料保護法》(POPIA) 第26條", RU:"《個人數據法》(152-FZ) 第10至11條",
+  },
+  specialNotes: { RU: "242-FZ另要求求職者資料的「首次儲存」必須在俄羅斯境內完成，單靠另行同意不足以符合規定，須額外評估資料本地化方案；2026年執法趨嚴（包括對外國企業的處罰先例）。" },
+  fieldNotes: {
+    "犯罪记录": { EU:"歐盟GDPR並未把刑事紀錄列入第9條法定敏感類別，但第10條要求具官方授權或必要性理據，實務上仍須謹慎處理。", UK:"與歐盟相同，須具官方授權或必要性理據。" },
+    "情绪识别数据": { EU:"歐盟《人工智能法》第5條自2025年2月起明確禁止在工作場所使用情緒辨識AI，沒有過渡期，違規最高可被罰全球營業額7%。", UK:"參照歐盟《人工智能法》標準，同樣不建議在英國招聘場景使用。" },
+  },
+};
+
+L10N["vi"] = {
+  label: "Tiếng Việt",
+  ui: {
+    pageTitle: "Kiểm tra tuân thủ · Kiểm tra tuân thủ dữ liệu tuyển dụng xuyên biên giới",
+    eyebrow: "Kiểm tra tuân thủ",
+    h1: "Kiểm tra tuân thủ dữ liệu tuyển dụng xuyên biên giới",
+    sub: "Dán vào danh sách trường của biểu mẫu, mẫu thư mời nhận việc hoặc đơn ứng tuyển thực tế (hoặc tải tệp lên). Công cụ sẽ tự động xác định những trường dữ liệu nào đang được thu thập và cho bạn biết từng trường có được thu thập tại thị trường mục tiêu hay không, cũng như cần điều chỉnh thế nào.",
+    metaCutoff: "Dữ liệu cập nhật đến: 2026-07-31",
+    metaCoverage: "Phạm vi: {m} khu vực pháp lý · {f} loại trường",
+    metaMethod: "Cách nhận diện: đối chiếu từ khóa (không phải hiểu ngữ nghĩa)",
+    credSummary: "Báo cáo này dựa trên cơ sở nào, vì sao đáng tin cậy? — Mở rộng để xem phương pháp và giới hạn",
+    credSourcesH: "Nguồn dữ liệu pháp luật",
+    credSources: "Bao gồm 32 khu vực pháp lý thuộc 10 vùng: Đại Trung Hoa, Đông Nam Á, Đông Bắc Á, châu Đại Dương, EU, châu Âu khác, Bắc Mỹ, Mỹ Latinh, Trung Đông và châu Phi. Căn cứ pháp lý cụ thể được ghi bên dưới từng khuyến nghị.",
+    credStdH: "Tiêu chí phân loại (dành riêng cho tuyển dụng)",
+    credStdPass: "<b>Được thu thập</b> — Dữ liệu cá nhân cơ bản; có thể thu thập khi có cơ sở hợp pháp (cần thiết cho hợp đồng / thông báo và đồng ý)",
+    credStdWarn: "<b>Cần thận trọng</b> — Không thuộc loại nhạy cảm theo luật nhưng có rủi ro phân biệt đối xử; chỉ thu thập ở giai đoạn cần thiết và không dùng để tự động loại ứng viên",
+    credStdRestrict: "<b>Hạn chế (nhạy cảm)</b> — Dữ liệu cá nhân nhạy cảm theo luật; cần sự đồng ý riêng + đánh giá DPIA + biện pháp bảo mật tăng cường",
+    credStdForbid: "<b>Bị cấm</b> — Pháp luật cấm rõ ràng việc sử dụng trong tuyển dụng; không có cách nào để tuân thủ",
+    credTierH: "Mức độ xác minh dữ liệu của từng khu vực pháp lý (phân loại trung thực)",
+    credTierBody: "Mức độ xác minh không hoàn toàn giống nhau giữa các khu vực pháp lý, được chia thành bốn cấp:<br><b>① Đã xác minh riêng từng trường</b>: Trung Quốc, Singapore, Nhật Bản, Hàn Quốc, Việt Nam, Indonesia, Thái Lan, Malaysia, Philippines, EU (chung), Vương quốc Anh, Ả Rập Xê Út và UAE — tổng cộng 13 khu vực pháp lý.<br><b>② Về mặt pháp lý dùng chung văn bản với EU</b>: Đức, Pháp, Hà Lan, Thụy Điển, Romania, Hungary và Áo — 7 khu vực pháp lý. GDPR là Quy định (Regulation) của EU, áp dụng trực tiếp và thống nhất tại các quốc gia thành viên, vì vậy định nghĩa về các loại dữ liệu cá nhân đặc biệt tại Điều 9 là cùng một điều khoản đối với 7 quốc gia này và \"EU\" — không phải ước tính.<br><b>③ Đã đối chiếu điều khoản cụ thể nhưng chưa xác minh từng trường</b>: Ma Cao (Luật Bảo vệ dữ liệu cá nhân, Điều 7), Thụy Sĩ (revFADP Điều 5(c)), Brazil (LGPD Điều 5 khoản II), Nam Phi (POPIA Điều 26), Peru (Ley 29733 Điều 2.5 + quy định mới tháng 3/2025 mở rộng sang dữ liệu cảm xúc/di truyền), Úc (Luật Quyền riêng tư 1988 Điều 6, bao gồm tiền án tiền sự), Hồng Kông (bản thân PDPO không có loại dữ liệu nhạy cảm theo luật; số chứng minh thư, sinh trắc học… được điều chỉnh riêng qua các bộ quy tắc thực hành của Ủy viên Quyền riêng tư), Hoa Kỳ (lấy CCPA/CPRA của California §1798.140(ae) làm tiêu chuẩn đại diện và đã đối chiếu từng mục — số căn cước/số an sinh xã hội, chủng tộc, tôn giáo, tư cách thành viên công đoàn, xu hướng tính dục, sức khỏe, di truyền, sinh trắc học, tài khoản tài chính và vị trí chính xác đều là loại nhạy cảm được CCPA liệt kê rõ; tiền án tiền sự và lương không nằm trong CCPA và được đánh giá theo các luật chuyên ngành khác), và Mexico (luật mới có hiệu lực từ 21/3/2025, Điều 2 khoản VI; khái niệm về cơ bản giống luật cũ, phần lớn quy định kế thừa khung cũ). Căn cứ đánh giá của các khu vực pháp lý này đã được đối chiếu với văn bản chính thức hoặc hướng dẫn có thẩm quyền và nhìn chung phù hợp với phân loại của công cụ, nhưng mức độ xác minh ở cấp trường vẫn thấp hơn cấp ①.<br><b>④ Ước tính theo phân loại, đang chờ xác minh từng mục</b>: Nga, Myanmar và Lào. Đánh giá cho các khu vực pháp lý này dựa trên việc phân loại mô hình quản lý hoặc khung tổng thể đã được xác minh, chưa đạt mức xác minh từng trường như cấp ①.",
+    credLimitsH: "Những gì báo cáo này không thể thay thế",
+    credLimits: "Công cụ này được tổng hợp từ thông tin pháp luật công khai và không cấu thành ý kiến pháp lý chính thức. Pháp luật các nước liên tục thay đổi (đặc biệt là Việt Nam, Ả Rập Xê Út, các bang của Hoa Kỳ và Mexico); nên nhờ luật sư có chuyên môn rà soát trước khi ký hợp đồng hoặc thu thập dữ liệu quy mô lớn.",
+    credKnownH: "Giới hạn và vấn đề đã biết",
+    credKnown: "Bộ từ khóa của mỗi trường bao gồm khoảng 8–15 cách diễn đạt phổ biến bằng tiếng Trung và tiếng Anh, nên vẫn có thể bỏ sót các cách diễn đạt khác thường hoặc ít gặp; hiện chưa nhận diện được tài liệu bằng ngôn ngữ khác ngoài tiếng Trung và tiếng Anh; chưa hỗ trợ trích xuất PDF dạng scan (không có lớp văn bản); đối với Hoa Kỳ, CCPA/CPRA của California được dùng làm tiêu chuẩn đại diện — luật quyền riêng tư của các bang khác có khác biệt, và luật của bang nơi ứng viên cư trú sẽ được ưu tiên áp dụng.",
+    step1Title: "Chọn thị trường mục tiêu",
+    step1Desc: "Có thể chọn nhiều, nhóm theo khu vực — tổng cộng 32 khu vực pháp lý",
+    step2Title: "Cung cấp tài liệu",
+    step2Desc: "Dán văn bản hoặc tải lên tệp Word / PDF",
+    modeText: "Dán văn bản",
+    modeFile: "Tải tệp lên",
+    pastePlaceholder: "Ví dụ: Đơn ứng tuyển yêu cầu điền họ tên, giới tính, ngày sinh, số căn cước, tình trạng hôn nhân, mức lương mong muốn, tình trạng sức khỏe, có tiền án tiền sự hay không…",
+    fileBoxText: "Nhấp để chọn một hoặc nhiều tệp .docx / .pdf (hỗ trợ tải lên hàng loạt), hoặc kéo thả vào đây",
+    genBtn: "Phân tích tài liệu và tạo báo cáo",
+    sourceSummary: "Nội dung tài liệu dùng cho lần phân tích này — mở rộng để kiểm tra có đúng với nội dung bạn đã tải lên/dán vào không",
+    lvlPass: "Được thu thập", lvlWarn: "Cần thận trọng", lvlRestrict: "Hạn chế (nhạy cảm)", lvlForbid: "Bị cấm", lvlNolaw: "Chưa có luật chuyên ngành",
+    dpiaBtn: "Tạo bản thảo DPIA (kèm tải Word)",
+    dpiaBtnTitle: "Tạo bản xem trước trên web và tự động tải xuống tài liệu Word",
+    pdfBtn: "Xuất PDF (có hình mờ)",
+    footer: "Kiểm tra tuân thủ v4.1 · Cập nhật lần cuối 2026-10-26 · Dữ liệu lấy từ Hướng dẫn triển khai tuân thủ tuyển dụng ra nước ngoài · Công cụ tuân thủ không chính thức, không phải ý kiến pháp lý; vui lòng nhờ luật sư có chuyên môn rà soát trước khi sử dụng chính thức · Designed &amp; built by Henry Hu",
+    translationNote: "Bản tiếng Việt này được cung cấp để thuận tiện tham khảo. Nếu có khác biệt, bản tiếng Trung sẽ được ưu tiên.",
+    unsupportedFile: "Định dạng tệp không được hỗ trợ. Vui lòng tải lên .docx hoặc .pdf",
+    parsing: "Đang phân tích {n} tệp…",
+    uploadedSummary: "Đã tải lên {n} tệp, trích xuất tổng cộng {chars} ký tự — có thể tạo báo cáo",
+    parseFailed: "Phân tích thất bại: {err}",
+    fewChars: "⚠ Chỉ trích xuất được {n} ký tự — có thể là tài liệu scan",
+    extracted: "Đã trích xuất {n} ký tự",
+    remove: "Xóa",
+    manualTag: "Thêm thủ công",
+    matchedKw: "Từ khóa khớp: “{kw}”",
+    nolawAction: "{m} chưa có luật chuyên ngành phân cấp dữ liệu cá nhân. Nên xử lý “{f}” một cách chặt chẽ theo các khung pháp lý hoàn thiện như GDPR, và lấy sự đồng ý rõ ràng, riêng biệt của ứng viên trước khi thu thập.",
+    legalBasis: "Căn cứ pháp lý: ",
+    actPass: "Tại {m}, “{f}” có thể được thu thập bình thường; nên nêu rõ mục đích thu thập trong chính sách quyền riêng tư.",
+    actWarn: "Tại {m}, “{f}” chỉ nên được thu thập ở giai đoạn cần thiết (ví dụ ở giai đoạn nhận việc thay vì sàng lọc ban đầu), không dùng cho quyết định sàng lọc/loại ứng viên tự động, và cần được giải thích riêng trong chính sách quyền riêng tư.",
+    actRestrict: "Tại {m}, “{f}” yêu cầu: sự đồng ý rõ ràng, riêng biệt của ứng viên (không gộp chung với các điều khoản khác), hoàn thành đánh giá DPIA, và áp dụng các biện pháp bảo mật tăng cường như lưu trữ mã hóa.",
+    actForbid: "Tại {m}, “{f}” bị cấm rõ ràng trong tuyển dụng và không có cách nào để tuân thủ. Cần xóa trường này khỏi biểu mẫu/quy trình và chặn theo khu vực ở cấp sản phẩm.",
+    customTag: "Trường tùy chỉnh",
+    customNote: "Trường này không có trong thư viện phân loại 32 khu vực pháp lý của công cụ, nên không thể tự động xác định tình trạng tuân thủ. Nên đánh giá thủ công bằng cách đối chiếu với các trường đã biết có tính chất tương tự (ví dụ thuộc nhóm thuộc tính nhạy cảm/thông tin sức khỏe), hoặc hỏi ý kiến bộ phận pháp chế trước khi thu thập.",
+    addFromLib: "Thêm từ thư viện trường",
+    allCovered: "Đã bao gồm toàn bộ {n} loại trường đã biết",
+    missingQ: "Tài liệu còn trường nào chưa được nhận diện?",
+    customPlaceholder: "Không có trong thư viện? Nhập tên trường tại đây",
+    addCustom: "Thêm trường tùy chỉnh",
+    watermark: "Chỉ để tham khảo · Không phải ý kiến pháp lý",
+    pastedText: "Văn bản đã dán",
+    uploadedParse: "Phân tích tệp tải lên",
+    docChars: " ({n} ký tự)",
+    empty: "(trống)",
+    srcMulti: "Cơ sở phân tích: {docs} tài liệu · tổng cộng {chars} ký tự · nhận diện được {matched} vị trí trường (gồm {manual} thêm thủ công, {custom} tùy chỉnh), {risk} mục cần lưu ý — mở rộng để kiểm tra nội dung gốc",
+    srcSingle: "Cơ sở phân tích: {src} · {chars} ký tự · nhận diện được {matched} trường{extra} — mở rộng để kiểm tra nội dung gốc",
+    srcSingleExtra: " (gồm {manual} thêm thủ công, {custom} tùy chỉnh)",
+    manualSection: "Trường được thêm thủ công",
+    autoSection: "Trường được nhận diện tự động",
+    emptyDoc: "Không nhận diện được từ khóa của trường nào đã biết trong tài liệu. Hãy thử mô tả tên các trường thu thập cụ thể hơn, hoặc thêm thủ công bên dưới.",
+    noMaterial: "Không có tài liệu để phân tích. Vui lòng dán văn bản hoặc tải tệp lên trước.",
+    batchTitle: "Tổng hợp hàng loạt",
+    batchBody: "<b>{docs}</b> tài liệu, nhận diện được tổng cộng <b>{matched}</b> vị trí trường (gồm <b>{manual}</b> thêm thủ công, <b>{custom}</b> tùy chỉnh), trong đó <b>{risk}</b> mục cần lưu ý tại các thị trường đã chọn (cần thận trọng / hạn chế / bị cấm / chưa có luật chuyên ngành). Xem chi tiết từng tệp bên dưới.",
+    perDocRisk: "{name} — nhận diện được {n} trường, {risk} mục cần lưu ý",
+    perDocOk: "{name} — nhận diện được {n} trường, tất cả đều có thể thu thập bình thường",
+    legalTooMany: "Nhiều thị trường liên quan ({n}); xem danh sách đầy đủ các căn cứ pháp lý tại Mục 2",
+    listSep: ", ", legalSep: "; ", colon: ": ", dash: " — ",
+    dpiaNone: "Không nhận diện được trường nào ở mức “Hạn chế (nhạy cảm)” tại các thị trường đã chọn, nên hiện chưa cần tạo DPIA.",
+    dpiaIntroLabel: "Mục đích và giá trị của DPIA: ",
+    dpiaIntro: "DPIA do chính công ty xử lý dữ liệu cá nhân tự đánh giá và tự lưu giữ, không cần nộp cho cơ quan quản lý phê duyệt; chỉ khi rủi ro còn lại sau đánh giá vẫn cao thì mới cần tham vấn trước với cơ quan quản lý. DPIA có ba tác dụng: thứ nhất, suy nghĩ thấu đáo về tính cần thiết và rủi ro trước khi thu thập dữ liệu, thay vì khắc phục sau khi sự cố xảy ra; thứ hai, lưu vết để tự chứng minh — khi có khiếu nại, rò rỉ dữ liệu hoặc thanh tra, DPIA là bằng chứng then chốt cho thấy công ty đã thực hiện nghĩa vụ thận trọng hợp lý; thứ ba, làm căn cứ ra quyết định nội bộ — nếu đánh giá cho thấy rủi ro thực sự quá cao và khó giảm thiểu, công ty nên điều chỉnh hoặc từ bỏ hoạt động xử lý liên quan.",
+    dpiaH0: "0. Thông tin cơ bản của tài liệu",
+    dpiaFill0: "Tên hoạt động xử lý · Người lập · Ngày lập · DPO/thành viên nhóm đánh giá (nếu có vị trí này, do DPO hoặc nhóm pháp chế/tuân thủ của công ty khách hàng chủ trì) — cần điền",
+    dpiaH1: "1. Mô tả có hệ thống về hoạt động xử lý",
+    dpiaFill1: "Mục đích xử lý · Phạm vi chủ thể dữ liệu · Vòng đời dữ liệu (thu thập → lưu trữ → sử dụng → chia sẻ → xóa) · Kiến trúc kỹ thuật hỗ trợ xử lý — cần điền",
+    dpiaH2: "2. Các khu vực pháp lý liên quan và căn cứ áp dụng",
+    dpiaDesc2: "Các thị trường mục tiêu được chọn trong báo cáo này và căn cứ pháp lý tương ứng (tự động điền):",
+    dpiaH3: "3. Bảng tổng quan các trường hạn chế (nhạy cảm)",
+    dpiaDesc3: "Các trường sau được xác định là “Hạn chế (nhạy cảm)” tại thị trường tương ứng và đều phải đưa vào phạm vi đánh giá DPIA lần này (tổng hợp tự động từ báo cáo này, không triển khai thành từng đoạn riêng):",
+    dpiaDesc3Word: "Các trường sau được xác định là “Hạn chế (nhạy cảm)” tại thị trường tương ứng và đều phải đưa vào phạm vi đánh giá DPIA lần này:",
+    thField: "Trường", thMarkets: "Thị trường liên quan", thLegal: "Căn cứ pháp lý",
+    dpiaH4: "4. Yêu cầu tuân thủ chung (áp dụng cho tất cả các mục trong bảng trên)",
+    dpiaReq1: "Ứng viên phải đồng ý rõ ràng, riêng biệt, không được gộp chung với các điều khoản khác",
+    dpiaReq2: "Hoàn thành đánh giá DPIA này và lưu giữ hồ sơ làm căn cứ tuân thủ",
+    dpiaReq3: "Lưu trữ mã hóa, giới hạn quyền truy cập cho các vị trí có nhu cầu nghiệp vụ",
+    dpiaH5: "5. Các ngoại lệ đặc biệt",
+    dpiaNoExceptions: "Các thị trường liên quan lần này không có ngoại lệ đặc biệt nào vượt quá yêu cầu chung.",
+    dpiaH6: "6. Bảo đảm quyền của chủ thể dữ liệu",
+    dpiaFill6: "Cách ứng viên thực hiện quyền truy cập/chỉnh sửa/xóa dữ liệu cá nhân và rút lại sự đồng ý, quy trình cụ thể và thời hạn phản hồi — cần điền",
+    dpiaH7: "7. Hồ sơ tham vấn và phê duyệt",
+    dpiaFill7: "Ý kiến của DPO/cố vấn pháp lý bên ngoài · Rủi ro còn lại có chấp nhận được không · Chữ ký và ngày của người phê duyệt · Ngày rà soát tiếp theo — cần điền",
+    docTitle: "Bản thảo DPIA",
+    docSubtitle: "Đánh giá tác động bảo vệ dữ liệu cá nhân (bản thảo)",
+    docNote: "Tài liệu này là bản thảo đầu tiên do “Kiểm tra tuân thủ” tự động tạo dựa trên báo cáo. Bản đánh giá chính thức cần được DPO (Cán bộ bảo vệ dữ liệu, nếu có vị trí này) hoặc nhóm pháp chế/tuân thủ của công ty khách hàng chủ trì rà soát và hoàn thiện; các phần ghi “cần điền” do nhóm này tự bổ sung. Tài liệu này không cấu thành ý kiến pháp lý chính thức.",
+    docFooter: "Tài liệu này được tổng hợp từ thông tin pháp luật công khai và không cấu thành ý kiến pháp lý chính thức; do Kiểm tra tuân thủ tạo ra, chỉ để tham khảo.",
+    fileDpia: "Ban_thao_DPIA_{date}",
+    fileReport: "Bao_cao_tuan_thu_{date}",
+  },
+  regions: { "大中华区":"Đại Trung Hoa","东南亚":"Đông Nam Á","东北亚":"Đông Bắc Á","大洋洲":"Châu Đại Dương","欧盟":"Liên minh châu Âu","欧洲其他":"Châu Âu khác","北美":"Bắc Mỹ","拉美":"Mỹ Latinh","中东":"Trung Đông","非洲":"Châu Phi" },
+  markets: { CN:"Trung Quốc",HK:"Hồng Kông",MO:"Ma Cao",SG:"Singapore",VN:"Việt Nam",ID:"Indonesia",TH:"Thái Lan",MY:"Malaysia",PH:"Philippines",MM:"Myanmar",LA:"Lào",JP:"Nhật Bản",KR:"Hàn Quốc",AU:"Úc",EU:"EU (chung)",DE:"Đức",FR:"Pháp",NL:"Hà Lan",SE:"Thụy Điển",RO:"Romania",HU:"Hungary",AT:"Áo",UK:"Vương quốc Anh",CH:"Thụy Sĩ",RU:"Nga",US:"Hoa Kỳ",MX:"Mexico",BR:"Brazil",PE:"Peru",SA:"Ả Rập Xê Út",AE:"UAE",ZA:"Nam Phi" },
+  cats: { "基础身份信息":"Thông tin nhân thân cơ bản","联系方式":"Thông tin liên hệ","职场信息":"Thông tin nghề nghiệp","敏感属性":"Thuộc tính nhạy cảm","健康与生物识别":"Sức khỏe và sinh trắc học","安全与法律相关":"An ninh và pháp lý","AI衍生数据":"Dữ liệu do AI tạo ra" },
+  fields: { "姓名":"Họ tên","性别":"Giới tính","出生日期/年龄":"Ngày sinh / Tuổi","国籍":"Quốc tịch","身份证号/护照号":"Số căn cước / Hộ chiếu","婚姻状况":"Tình trạng hôn nhân","手机号":"Số điện thoại di động","邮箱":"Email","住址/地址":"Địa chỉ","工作履历":"Kinh nghiệm làm việc","学历/教育背景":"Trình độ học vấn","薪酬/薪资信息":"Thông tin lương thưởng","职业技能/证书":"Kỹ năng / Chứng chỉ","照片/头像":"Ảnh chân dung","种族/民族":"Chủng tộc / Dân tộc","宗教信仰":"Tôn giáo","政治观点":"Quan điểm chính trị","工会会员":"Thành viên công đoàn","性取向":"Xu hướng tính dục","健康/医疗状况":"Tình trạng sức khỏe / y tế","残疾状况":"Tình trạng khuyết tật","基因数据":"Dữ liệu di truyền","生物识别(指纹/面部)":"Sinh trắc học (vân tay / khuôn mặt)","犯罪记录":"Tiền án tiền sự","金融/银行信息":"Thông tin tài chính / ngân hàng","社保号/税号":"Số bảo hiểm xã hội / Mã số thuế","定位/行踪轨迹":"Vị trí / Lịch trình di chuyển","面试视频录像":"Video ghi hình phỏng vấn","情绪识别数据":"Dữ liệu nhận diện cảm xúc","AI评估评分":"Điểm đánh giá bằng AI" },
+  legal: {
+    CN:"Luật Bảo vệ thông tin cá nhân (PIPL), Điều 28", SG:"PDPA 2012 (sửa đổi 2024)", JP:"APPI (Luật Bảo vệ thông tin cá nhân)",
+    KR:"PIPA (Luật Bảo vệ thông tin cá nhân, sửa đổi 2023)", VN:"Luật Bảo vệ dữ liệu cá nhân 2025 + Nghị định 356", ID:"Luật PDP (Luật số 27 năm 2022)", MY:"PDPA 2010 (sửa đổi 2024)",
+    EU:"GDPR Điều 9 (các loại dữ liệu cá nhân đặc biệt)", SA:"PDPL (bản sửa đổi 2023)", AE:"PDPL liên bang (Sắc luật số 45/2021)",
+    HK:"Pháp lệnh Dữ liệu cá nhân (Quyền riêng tư) (PDPO), Chương 486 (không có loại dữ liệu nhạy cảm theo luật; dựa vào bộ quy tắc thực hành/hướng dẫn của Ủy viên Quyền riêng tư)", MO:"Luật Bảo vệ dữ liệu cá nhân (Luật số 8/2005), Điều 7 (các loại dữ liệu cá nhân đặc biệt)",
+    AU:"Luật Quyền riêng tư 1988 (Cth), Điều 6 (định nghĩa thông tin nhạy cảm, bao gồm tiền án tiền sự)", MM:"Không có luật chuyên ngành về bảo vệ dữ liệu (áp dụng một số điều khoản của Luật Giao dịch điện tử)", LA:"Không có luật chuyên ngành về bảo vệ dữ liệu",
+    CH:"revFADP Điều 5(c) (dữ liệu cá nhân đặc biệt nhạy cảm, có hiệu lực từ tháng 9/2023)",
+    US:"Lấy CCPA/CPRA của California (Bộ luật Dân sự §1798.140(ae)) làm tiêu chuẩn đại diện — California là nơi dẫn dắt lập pháp về quyền riêng tư tại Hoa Kỳ, và từ năm 2023 dữ liệu của nhân viên/ứng viên không còn được miễn trừ khỏi CCPA, nên phù hợp làm tham chiếu hơn so với nhiều luật bang loại trừ hoạt động tuyển dụng; các trường không được CCPA xếp vào loại nhạy cảm như tiền án tiền sự, lương được đánh giá riêng theo luật chuyên ngành liên bang/bang (hướng dẫn của EEOC, luật cấm hỏi lịch sử lương của các bang)",
+    MX:"Luật Bảo vệ dữ liệu cá nhân mới (công bố ngày 20/3/2025 / có hiệu lực ngày 21/3/2025), Điều 2 khoản VI (định nghĩa dữ liệu cá nhân nhạy cảm; khái niệm về cơ bản giống luật cũ, danh mục liệt kê kế thừa khung cũ)", BR:"Luật Bảo vệ dữ liệu chung (LGPD), Điều 5 khoản II", PE:"Luật Bảo vệ dữ liệu cá nhân (Ley 29733), Điều 2 khoản 5 + quy định mới tháng 3/2025 (DS 016-2024-JUS) mở rộng sang dữ liệu cảm xúc và di truyền",
+    ZA:"Luật Bảo vệ thông tin cá nhân (POPIA), Điều 26", RU:"Luật Liên bang về Dữ liệu cá nhân (152-FZ), Điều 10–11",
+  },
+  specialNotes: { RU: "Luật 242-FZ còn yêu cầu dữ liệu ứng viên phải được “lưu trữ lần đầu” trong lãnh thổ Nga; chỉ dựa vào sự đồng ý riêng là chưa đủ để tuân thủ, cần đánh giá thêm phương án nội địa hóa dữ liệu. Năm 2026 việc thực thi ngày càng nghiêm ngặt (bao gồm các tiền lệ xử phạt doanh nghiệp nước ngoài)." },
+  fieldNotes: {
+    "犯罪记录": { EU:"GDPR của EU không xếp tiền án tiền sự vào các loại đặc biệt theo Điều 9, nhưng Điều 10 yêu cầu phải có thẩm quyền chính thức hoặc lập luận về tính cần thiết, nên trên thực tế vẫn cần xử lý thận trọng.", UK:"Tương tự EU, cần có thẩm quyền chính thức hoặc lập luận về tính cần thiết." },
+    "情绪识别数据": { EU:"Điều 5 Đạo luật AI của EU đã cấm rõ ràng AI nhận diện cảm xúc tại nơi làm việc từ tháng 2/2025, không có thời gian chuyển tiếp; vi phạm có thể bị phạt tới 7% doanh thu toàn cầu.", UK:"Tham chiếu theo tiêu chuẩn Đạo luật AI của EU, cũng không khuyến nghị sử dụng trong tuyển dụng tại Vương quốc Anh." },
+  },
+};
+
+L10N["id"] = {
+  label: "Bahasa Indonesia",
+  ui: {
+    pageTitle: "Cek Kepatuhan · Pemeriksaan Kepatuhan Data Rekrutmen Lintas Negara",
+    eyebrow: "Cek Kepatuhan",
+    h1: "Pemeriksaan Kepatuhan Data Rekrutmen Lintas Negara",
+    sub: "Tempelkan daftar isian formulir, templat surat penawaran kerja, atau formulir lamaran kandidat yang sebenarnya (atau unggah berkas). Alat ini akan otomatis mengidentifikasi kolom data apa saja yang dikumpulkan dan memberi tahu Anda, kolom demi kolom, apakah masing-masing boleh dikumpulkan di pasar tujuan dan apa yang perlu diubah.",
+    metaCutoff: "Data per: 2026-07-31",
+    metaCoverage: "Cakupan: {m} yurisdiksi · {f} jenis kolom",
+    metaMethod: "Metode deteksi: pencocokan kata kunci (bukan pemahaman semantik)",
+    credSummary: "Apa dasar laporan ini, dan mengapa dapat dipercaya? — Buka untuk melihat metodologi dan keterbatasan",
+    credSourcesH: "Sumber data regulasi",
+    credSources: "Mencakup 32 yurisdiksi di 10 kawasan: Tiongkok Raya, Asia Tenggara, Asia Timur Laut, Oseania, Uni Eropa, Eropa lainnya, Amerika Utara, Amerika Latin, Timur Tengah, dan Afrika. Dasar hukum yang spesifik dicantumkan di bawah setiap rekomendasi.",
+    credStdH: "Kriteria klasifikasi (khusus rekrutmen)",
+    credStdPass: "<b>Boleh dikumpulkan</b> — Data pribadi umum; dapat dikumpulkan dengan dasar hukum yang sah (kebutuhan kontrak / pemberitahuan dan persetujuan)",
+    credStdWarn: "<b>Perlu kehati-hatian</b> — Bukan kategori sensitif menurut undang-undang, tetapi berisiko diskriminasi; kumpulkan hanya pada tahap yang diperlukan dan jangan digunakan untuk penolakan otomatis",
+    credStdRestrict: "<b>Terbatas (sensitif)</b> — Data pribadi sensitif menurut undang-undang; memerlukan persetujuan terpisah + DPIA + langkah keamanan yang ditingkatkan",
+    credStdForbid: "<b>Dilarang</b> — Secara tegas dilarang oleh hukum dalam rekrutmen; tidak ada cara alternatif yang patuh",
+    credTierH: "Tingkat verifikasi data tiap yurisdiksi (penilaian jujur)",
+    credTierBody: "Kedalaman verifikasi tidak sepenuhnya sama di setiap yurisdiksi, dan dibagi menjadi empat tingkat:<br><b>① Diverifikasi kolom demi kolom</b>: Tiongkok, Singapura, Jepang, Korea Selatan, Vietnam, Indonesia, Thailand, Malaysia, Filipina, Uni Eropa (umum), Inggris, Arab Saudi, dan UEA — total 13 yurisdiksi.<br><b>② Secara hukum teksnya sama dengan Uni Eropa</b>: Jerman, Prancis, Belanda, Swedia, Rumania, Hongaria, dan Austria — 7 yurisdiksi. GDPR adalah Regulasi (Regulation) UE yang berlaku langsung dan seragam di negara anggota, sehingga definisi kategori khusus data pribadi dalam Pasal 9 adalah ketentuan yang sama persis bagi ketujuh negara ini dan \"UE\" — bukan perkiraan.<br><b>③ Ketentuan hukum spesifik telah diperiksa, tetapi belum diverifikasi kolom demi kolom</b>: Makau (Undang-Undang Perlindungan Data Pribadi, Pasal 7), Swiss (revFADP Pasal 5(c)), Brasil (LGPD Pasal 5 angka II), Afrika Selatan (POPIA Pasal 26), Peru (Ley 29733 Pasal 2.5 + peraturan baru Maret 2025 yang memperluas ke data emosi/genetik), Australia (Privacy Act 1988 Pasal 6, termasuk catatan kriminal), Hong Kong (PDPO sendiri tidak memiliki kategori sensitif menurut undang-undang; nomor identitas, biometrik, dan lainnya diatur terpisah melalui kode praktik Komisioner Privasi), Amerika Serikat (CCPA/CPRA California §1798.140(ae) dijadikan standar acuan dan telah diperiksa butir demi butir — nomor identitas/jaminan sosial, ras, agama, keanggotaan serikat pekerja, orientasi seksual, kesehatan, genetik, biometrik, rekening keuangan, dan lokasi presisi semuanya merupakan kategori sensitif yang secara tegas tercantum dalam CCPA; catatan kriminal dan gaji tidak tercantum dalam CCPA dan dinilai berdasarkan undang-undang khusus lainnya), serta Meksiko (undang-undang baru berlaku sejak 21 Maret 2025, Pasal 2 angka VI; konsepnya pada dasarnya sama dengan undang-undang lama, dan sebagian besar ketentuan mengikuti kerangka sebelumnya). Dasar penilaian yurisdiksi ini telah dicocokkan dengan teks resmi atau panduan otoritatif dan secara umum sesuai dengan klasifikasi alat ini, tetapi kedalaman verifikasi di tingkat kolom masih di bawah tingkat ①.<br><b>④ Perkiraan berdasarkan klasifikasi, menunggu verifikasi butir demi butir</b>: Rusia, Myanmar, dan Laos. Penilaian untuk yurisdiksi ini didasarkan pada klasifikasi model regulasi atau kerangka umum yang telah diverifikasi, dan belum mencapai verifikasi kolom demi kolom setara tingkat ①.",
+    credLimitsH: "Apa yang tidak dapat digantikan oleh laporan ini",
+    credLimits: "Alat ini disusun dari informasi regulasi yang tersedia untuk umum dan bukan merupakan nasihat hukum resmi. Regulasi di berbagai negara terus berubah (terutama Vietnam, Arab Saudi, negara-negara bagian AS, dan Meksiko); mintalah pengacara yang berkualifikasi untuk meninjau sebelum menandatangani kontrak atau mengumpulkan data dalam skala besar.",
+    credKnownH: "Keterbatasan dan masalah yang diketahui",
+    credKnown: "Kamus kata kunci mencakup sekitar 8–15 ungkapan umum dalam bahasa Mandarin dan Inggris untuk setiap kolom, sehingga ungkapan yang tidak lazim atau jarang digunakan masih mungkin terlewat; dokumen dalam bahasa selain Mandarin dan Inggris belum dapat dikenali; PDF hasil pindaian (tanpa lapisan teks) belum didukung; untuk AS, CCPA/CPRA California digunakan sebagai standar acuan — undang-undang privasi di negara bagian lain berbeda, dan hukum negara bagian tempat kandidat berada yang berlaku.",
+    step1Title: "Pilih pasar tujuan",
+    step1Desc: "Dapat memilih lebih dari satu, dikelompokkan per kawasan — total 32 yurisdiksi",
+    step2Title: "Berikan dokumen",
+    step2Desc: "Tempelkan teks, atau unggah berkas Word / PDF",
+    modeText: "Tempel teks",
+    modeFile: "Unggah berkas",
+    pastePlaceholder: "Contoh: Formulir lamaran kandidat wajib mengisi nama, jenis kelamin, tanggal lahir, nomor identitas, status perkawinan, gaji yang diharapkan, kondisi kesehatan, ada atau tidaknya catatan kriminal…",
+    fileBoxText: "Klik untuk memilih satu atau beberapa berkas .docx / .pdf (mendukung unggah massal), atau seret ke sini",
+    genBtn: "Analisis dokumen dan buat laporan",
+    sourceSummary: "Isi dokumen yang digunakan untuk analisis ini — buka untuk memastikan sesuai dengan yang Anda unggah/tempelkan",
+    lvlPass: "Boleh dikumpulkan", lvlWarn: "Perlu kehati-hatian", lvlRestrict: "Terbatas (sensitif)", lvlForbid: "Dilarang", lvlNolaw: "Belum ada UU khusus",
+    dpiaBtn: "Buat draf DPIA (dengan unduhan Word)",
+    dpiaBtnTitle: "Membuat pratinjau web dan otomatis mengunduh dokumen Word",
+    pdfBtn: "Ekspor PDF (dengan tanda air)",
+    footer: "Cek Kepatuhan v4.1 · Terakhir diperbarui 2026-10-26 · Data bersumber dari Panduan Penerapan Kepatuhan Rekrutmen Luar Negeri · Alat kepatuhan tidak resmi, bukan nasihat hukum; mintalah pengacara yang berkualifikasi untuk meninjau sebelum digunakan secara resmi · Designed &amp; built by Henry Hu",
+    translationNote: "Versi Bahasa Indonesia ini disediakan untuk kemudahan. Jika terdapat perbedaan, versi bahasa Mandarin yang berlaku.",
+    unsupportedFile: "Format berkas tidak didukung. Silakan unggah .docx atau .pdf",
+    parsing: "Sedang memproses {n} berkas…",
+    uploadedSummary: "{n} berkas telah diunggah, total {chars} karakter berhasil diekstrak — laporan siap dibuat",
+    parseFailed: "Gagal memproses: {err}",
+    fewChars: "⚠ Hanya {n} karakter yang berhasil diekstrak — kemungkinan dokumen hasil pindaian",
+    extracted: "{n} karakter diekstrak",
+    remove: "Hapus",
+    manualTag: "Ditambahkan manual",
+    matchedKw: "Kata kunci yang cocok: “{kw}”",
+    nolawAction: "{m} belum memiliki undang-undang khusus yang mengatur tingkatan data pribadi. Tangani “{f}” secara ketat dengan mengacu pada kerangka yang matang seperti GDPR, dan dapatkan persetujuan eksplisit terpisah dari kandidat sebelum mengumpulkannya.",
+    legalBasis: "Dasar hukum: ",
+    actPass: "Di {m}, “{f}” dapat dikumpulkan seperti biasa; jelaskan tujuan pengumpulannya dalam kebijakan privasi.",
+    actWarn: "Di {m}, “{f}” sebaiknya hanya dikumpulkan pada tahap yang diperlukan (misalnya saat orientasi karyawan baru, bukan saat penyaringan awal), tidak digunakan untuk keputusan penyaringan/penolakan otomatis, dan dijelaskan secara terpisah dalam kebijakan privasi.",
+    actRestrict: "Di {m}, “{f}” memerlukan: persetujuan eksplisit terpisah dari kandidat (tidak digabung dengan ketentuan lain), DPIA yang telah diselesaikan, dan langkah keamanan yang ditingkatkan seperti penyimpanan terenkripsi.",
+    actForbid: "Di {m}, “{f}” secara tegas dilarang dalam rekrutmen dan tidak ada cara alternatif yang patuh. Hapus kolom ini dari formulir/proses dan blokir per kawasan di tingkat produk.",
+    customTag: "Kolom kustom",
+    customNote: "Kolom ini tidak ada dalam pustaka klasifikasi 32 yurisdiksi milik alat ini, sehingga status kepatuhannya tidak dapat ditentukan secara otomatis. Nilai secara manual dengan membandingkannya dengan kolom serupa yang sudah dikenal (misalnya kategori atribut sensitif/informasi kesehatan), atau konfirmasikan dengan tim hukum sebelum mengumpulkannya.",
+    addFromLib: "Tambah dari pustaka kolom",
+    allCovered: "Seluruh {n} jenis kolom yang dikenal sudah tercakup",
+    missingQ: "Ada kolom dalam dokumen yang belum terdeteksi?",
+    customPlaceholder: "Tidak ada di pustaka? Masukkan nama kolom di sini",
+    addCustom: "Tambah kolom kustom",
+    watermark: "Hanya untuk referensi · Bukan nasihat hukum",
+    pastedText: "Teks yang ditempel",
+    uploadedParse: "Hasil pemrosesan berkas unggahan",
+    docChars: " ({n} karakter)",
+    empty: "(kosong)",
+    srcMulti: "Dasar analisis ini: {docs} dokumen · total {chars} karakter · {matched} kemunculan kolom terdeteksi (termasuk {manual} ditambahkan manual, {custom} kustom), {risk} butir perlu perhatian — buka untuk memeriksa isi aslinya",
+    srcSingle: "Dasar analisis ini: {src} · {chars} karakter · {matched} kolom terdeteksi{extra} — buka untuk memeriksa isi aslinya",
+    srcSingleExtra: " (termasuk {manual} ditambahkan manual, {custom} kustom)",
+    manualSection: "Kolom yang ditambahkan manual",
+    autoSection: "Kolom yang terdeteksi otomatis",
+    emptyDoc: "Tidak ada kata kunci kolom yang dikenal terdeteksi dalam dokumen. Coba jelaskan nama kolom yang dikumpulkan secara lebih spesifik, atau tambahkan secara manual di bawah.",
+    noMaterial: "Tidak ada dokumen untuk dianalisis. Silakan tempel teks atau unggah berkas terlebih dahulu.",
+    batchTitle: "Ringkasan massal",
+    batchBody: "<b>{docs}</b> dokumen, total <b>{matched}</b> kemunculan kolom terdeteksi (termasuk <b>{manual}</b> ditambahkan manual, <b>{custom}</b> kustom), di antaranya <b>{risk}</b> butir perlu perhatian di pasar yang dipilih (perlu kehati-hatian / terbatas / dilarang / belum ada UU khusus). Lihat rincian per berkas di bawah.",
+    perDocRisk: "{name} — {n} kolom terdeteksi, {risk} perlu perhatian",
+    perDocOk: "{name} — {n} kolom terdeteksi, semuanya boleh dikumpulkan seperti biasa",
+    legalTooMany: "Banyak pasar terkait ({n}); lihat daftar lengkap dasar hukum di Bagian 2",
+    listSep: ", ", legalSep: "; ", colon: ": ", dash: " — ",
+    dpiaNone: "Tidak ada kolom berstatus “Terbatas (sensitif)” yang terdeteksi di pasar yang dipilih, sehingga DPIA belum diperlukan saat ini.",
+    dpiaIntroLabel: "Tujuan dan nilai DPIA: ",
+    dpiaIntro: "DPIA dilakukan dan disimpan sendiri oleh perusahaan yang memproses data pribadi; tidak perlu diserahkan kepada regulator untuk disetujui, dan konsultasi terlebih dahulu dengan regulator hanya diperlukan apabila risiko sisa setelah penilaian masih tinggi. DPIA memiliki tiga fungsi: pertama, memikirkan kebutuhan dan risiko sebelum mengumpulkan data, alih-alih memperbaiki setelah masalah terjadi; kedua, menjadi jejak pembuktian — bila terjadi pengaduan, kebocoran data, atau pemeriksaan regulator, DPIA adalah bukti kunci bahwa perusahaan telah menjalankan kewajiban kehati-hatian yang wajar; ketiga, menjadi dasar keputusan internal — jika penilaian menunjukkan risiko memang terlalu tinggi dan sulit dimitigasi, perusahaan harus menyesuaikan atau menghentikan kegiatan pemrosesan tersebut.",
+    dpiaH0: "0. Informasi dasar dokumen",
+    dpiaFill0: "Nama kegiatan pemrosesan · Penyusun · Tanggal penyusunan · DPO/anggota tim penilai (jika jabatan ini ada, dipimpin oleh DPO atau tim hukum/kepatuhan perusahaan klien) — perlu diisi",
+    dpiaH1: "1. Deskripsi sistematis kegiatan pemrosesan",
+    dpiaFill1: "Tujuan pemrosesan · Cakupan subjek data · Siklus hidup data (pengumpulan → penyimpanan → penggunaan → pembagian → penghapusan) · Arsitektur teknis pendukung — perlu diisi",
+    dpiaH2: "2. Yurisdiksi terkait dan dasar hukum yang berlaku",
+    dpiaDesc2: "Pasar tujuan yang dipilih dalam laporan ini beserta dasar hukumnya (diisi otomatis):",
+    dpiaH3: "3. Ringkasan kolom terbatas (sensitif)",
+    dpiaDesc3: "Kolom berikut ditetapkan sebagai “Terbatas (sensitif)” di pasar terkait dan semuanya harus dimasukkan ke dalam cakupan DPIA ini (dirangkum otomatis dari laporan ini, tidak diuraikan menjadi bagian tersendiri):",
+    dpiaDesc3Word: "Kolom berikut ditetapkan sebagai “Terbatas (sensitif)” di pasar terkait dan semuanya harus dimasukkan ke dalam cakupan DPIA ini:",
+    thField: "Kolom", thMarkets: "Pasar terkait", thLegal: "Dasar hukum",
+    dpiaH4: "4. Persyaratan kepatuhan umum (berlaku untuk semua butir di atas)",
+    dpiaReq1: "Kandidat harus memberikan persetujuan eksplisit secara terpisah, tidak digabung dengan ketentuan lain",
+    dpiaReq2: "Selesaikan DPIA ini dan simpan catatannya sebagai bukti kepatuhan",
+    dpiaReq3: "Gunakan penyimpanan terenkripsi dan batasi hak akses hanya untuk posisi yang membutuhkannya",
+    dpiaH5: "5. Pengecualian khusus",
+    dpiaNoExceptions: "Pasar yang terkait kali ini tidak memiliki pengecualian khusus di luar persyaratan umum.",
+    dpiaH6: "6. Pengaturan pemenuhan hak subjek data",
+    dpiaFill6: "Cara kandidat menggunakan hak untuk mengakses/memperbaiki/menghapus data pribadi dan menarik persetujuan, beserta prosedur dan batas waktu tanggapan — perlu diisi",
+    dpiaH7: "7. Catatan konsultasi dan persetujuan",
+    dpiaFill7: "Pendapat DPO/penasihat hukum eksternal · Apakah risiko sisa dapat diterima · Tanda tangan dan tanggal pemberi persetujuan · Tanggal peninjauan berikutnya — perlu diisi",
+    docTitle: "Draf DPIA",
+    docSubtitle: "Penilaian Dampak Pelindungan Data Pribadi (Draf)",
+    docNote: "Dokumen ini adalah draf awal yang dibuat otomatis oleh “Cek Kepatuhan” berdasarkan laporan. Penilaian resmi harus ditinjau dan diselesaikan di bawah pimpinan DPO (Pejabat Pelindungan Data Pribadi, jika jabatan ini ada) atau tim hukum/kepatuhan perusahaan klien, yang wajib melengkapi bagian bertanda “perlu diisi”. Dokumen ini bukan merupakan nasihat hukum resmi.",
+    docFooter: "Dokumen ini disusun dari informasi regulasi yang tersedia untuk umum dan bukan merupakan nasihat hukum resmi; dibuat oleh Cek Kepatuhan hanya sebagai referensi.",
+    fileDpia: "Draf_DPIA_{date}",
+    fileReport: "Laporan_Kepatuhan_{date}",
+  },
+  regions: { "大中华区":"Tiongkok Raya","东南亚":"Asia Tenggara","东北亚":"Asia Timur Laut","大洋洲":"Oseania","欧盟":"Uni Eropa","欧洲其他":"Eropa lainnya","北美":"Amerika Utara","拉美":"Amerika Latin","中东":"Timur Tengah","非洲":"Afrika" },
+  markets: { CN:"Tiongkok",HK:"Hong Kong",MO:"Makau",SG:"Singapura",VN:"Vietnam",ID:"Indonesia",TH:"Thailand",MY:"Malaysia",PH:"Filipina",MM:"Myanmar",LA:"Laos",JP:"Jepang",KR:"Korea Selatan",AU:"Australia",EU:"UE (umum)",DE:"Jerman",FR:"Prancis",NL:"Belanda",SE:"Swedia",RO:"Rumania",HU:"Hongaria",AT:"Austria",UK:"Inggris",CH:"Swiss",RU:"Rusia",US:"Amerika Serikat",MX:"Meksiko",BR:"Brasil",PE:"Peru",SA:"Arab Saudi",AE:"UEA",ZA:"Afrika Selatan" },
+  cats: { "基础身份信息":"Identitas dasar","联系方式":"Informasi kontak","职场信息":"Informasi pekerjaan","敏感属性":"Atribut sensitif","健康与生物识别":"Kesehatan & biometrik","安全与法律相关":"Keamanan & hukum","AI衍生数据":"Data turunan AI" },
+  fields: { "姓名":"Nama","性别":"Jenis kelamin","出生日期/年龄":"Tanggal lahir / Usia","国籍":"Kewarganegaraan","身份证号/护照号":"Nomor KTP / Paspor","婚姻状况":"Status perkawinan","手机号":"Nomor ponsel","邮箱":"Email","住址/地址":"Alamat tempat tinggal","工作履历":"Riwayat pekerjaan","学历/教育背景":"Pendidikan","薪酬/薪资信息":"Gaji / Kompensasi","职业技能/证书":"Keterampilan / Sertifikasi","照片/头像":"Foto","种族/民族":"Ras / Suku","宗教信仰":"Agama","政治观点":"Pandangan politik","工会会员":"Keanggotaan serikat pekerja","性取向":"Orientasi seksual","健康/医疗状况":"Kondisi kesehatan / medis","残疾状况":"Disabilitas","基因数据":"Data genetik","生物识别(指纹/面部)":"Biometrik (sidik jari / wajah)","犯罪记录":"Catatan kriminal","金融/银行信息":"Informasi keuangan / bank","社保号/税号":"Nomor jaminan sosial / NPWP","定位/行踪轨迹":"Lokasi / Riwayat pergerakan","面试视频录像":"Rekaman video wawancara","情绪识别数据":"Data pengenalan emosi","AI评估评分":"Skor penilaian AI" },
+  legal: {
+    CN:"Undang-Undang Perlindungan Informasi Pribadi (PIPL), Pasal 28", SG:"PDPA 2012 (amendemen 2024)", JP:"APPI (Undang-Undang Perlindungan Informasi Pribadi)",
+    KR:"PIPA (Undang-Undang Perlindungan Informasi Pribadi, amendemen 2023)", ID:"UU PDP (Undang-Undang Nomor 27 Tahun 2022)", MY:"PDPA 2010 (amendemen 2024)",
+    EU:"GDPR Pasal 9 (kategori khusus data pribadi)", SA:"PDPL (versi amendemen 2023)", AE:"PDPL Federal (Dekret-Undang-Undang No. 45/2021)",
+    HK:"Ordinansi Data Pribadi (Privasi) (PDPO), Bab 486 (tidak ada kategori data sensitif menurut undang-undang; mengacu pada kode praktik/panduan Komisioner Privasi)", MO:"Undang-Undang Perlindungan Data Pribadi (UU No. 8/2005), Pasal 7 (kategori khusus data pribadi)",
+    AU:"Privacy Act 1988 (Cth), Pasal 6 (definisi informasi sensitif, termasuk catatan kriminal)", MM:"Tidak ada undang-undang khusus perlindungan data (sebagian ketentuan Undang-Undang Transaksi Elektronik berlaku)", LA:"Tidak ada undang-undang khusus perlindungan data",
+    CH:"revFADP Pasal 5(c) (data pribadi yang sangat sensitif; berlaku sejak September 2023)",
+    US:"CCPA/CPRA California (Kitab Undang-Undang Hukum Perdata §1798.140(ae)) dijadikan standar acuan — California adalah barometer legislasi privasi AS, dan sejak 2023 data karyawan/pelamar kerja tidak lagi dikecualikan dari CCPA, sehingga lebih tepat dijadikan acuan dibanding banyak undang-undang negara bagian yang mengecualikan rekrutmen; kolom yang tidak dikategorikan sensitif oleh CCPA, seperti catatan kriminal dan gaji, dinilai terpisah berdasarkan undang-undang khusus federal/negara bagian (panduan EEOC, larangan menanyakan riwayat gaji di berbagai negara bagian)",
+    MX:"Undang-Undang Perlindungan Data Pribadi yang baru (diundangkan 20 Maret 2025 / berlaku 21 Maret 2025), Pasal 2 angka VI (definisi data pribadi sensitif; konsep pada dasarnya sama dengan undang-undang lama, daftar rinciannya mengikuti kerangka sebelumnya)", BR:"Undang-Undang Umum Perlindungan Data (LGPD), Pasal 5 angka II", PE:"Undang-Undang Perlindungan Data Pribadi (Ley 29733), Pasal 2 angka 5 + peraturan baru Maret 2025 (DS 016-2024-JUS) yang memperluas ke data emosi dan genetik",
+    ZA:"Undang-Undang Perlindungan Informasi Pribadi (POPIA), Pasal 26", RU:"Undang-Undang Federal tentang Data Pribadi (152-FZ), Pasal 10–11",
+  },
+  specialNotes: { RU: "Undang-Undang 242-FZ juga mewajibkan data kandidat “disimpan pertama kali” di wilayah Rusia; persetujuan terpisah saja tidak cukup untuk memenuhi kepatuhan, sehingga solusi lokalisasi data perlu dinilai tersendiri. Penegakan hukum semakin ketat pada 2026 (termasuk preseden sanksi terhadap perusahaan asing)." },
+  fieldNotes: {
+    "犯罪记录": { EU:"GDPR Uni Eropa tidak memasukkan catatan kriminal ke dalam kategori khusus menurut Pasal 9, tetapi Pasal 10 mensyaratkan kewenangan resmi atau justifikasi kebutuhan, sehingga dalam praktiknya tetap perlu ditangani dengan hati-hati.", UK:"Sama seperti UE — diperlukan kewenangan resmi atau justifikasi kebutuhan." },
+    "情绪识别数据": { EU:"Pasal 5 Undang-Undang AI Uni Eropa secara tegas melarang AI pengenalan emosi di tempat kerja sejak Februari 2025, tanpa masa transisi; pelanggaran dapat didenda hingga 7% dari omzet global.", UK:"Mengacu pada standar Undang-Undang AI UE, penggunaannya dalam rekrutmen di Inggris juga tidak disarankan." },
+  },
+};
+
+L10N["ja"] = {
+  label: "日本語",
+  ui: {
+    pageTitle: "コンプライアンス診断 · 越境採用データのコンプライアンスチェック",
+    eyebrow: "コンプライアンス診断",
+    h1: "越境採用データのコンプライアンスチェック",
+    sub: "実際のフォーム項目一覧、オファーレターのテンプレート、応募書類などを貼り付ける（またはファイルをアップロードする）と、どの個人データ項目を収集しているかを自動で特定し、対象市場で収集できるかどうか、どう修正すべきかを項目ごとに示します。",
+    metaCutoff: "データ基準日：2026-07-31",
+    metaCoverage: "対象：{m}法域 · {f}種類の項目",
+    metaMethod: "識別方式：キーワード照合（意味解析ではありません）",
+    credSummary: "このレポートの根拠は？なぜ信頼できるのか — 方法論と限界を表示",
+    credSourcesH: "法令データの出典",
+    credSources: "大中華圏、東南アジア、北東アジア、オセアニア、EU、その他欧州、北米、中南米、中東、アフリカの10地域・32法域を対象としています。具体的な法的根拠は各推奨事項の下に記載しています。",
+    credStdH: "分類基準（採用場面に特化）",
+    credStdPass: "<b>収集可</b> — 一般的な個人情報。適法な根拠（契約上の必要性／通知と同意）があれば収集可能",
+    credStdWarn: "<b>要注意</b> — 法定のセンシティブ情報ではないが差別リスクがあり、必要な段階に限って収集し、自動的な不採用判断には使用しない",
+    credStdRestrict: "<b>制限（センシティブ）</b> — 法定のセンシティブ個人情報。個別の同意 + DPIA + 強化された安全管理措置が必要",
+    credStdForbid: "<b>禁止</b> — 採用場面での利用が法律で明確に禁止されており、適法な回避策はない",
+    credTierH: "各法域データの検証度合い（正直な格付け）",
+    credTierBody: "法域によって検証の深さは同一ではなく、次の4段階に分かれます：<br><b>① 項目ごとに個別検証済み</b>：中国、シンガポール、日本、韓国、ベトナム、インドネシア、タイ、マレーシア、フィリピン、EU（共通）、英国、サウジアラビア、UAEの計13法域。<br><b>② 法的にEUと同一の条文</b>：ドイツ、フランス、オランダ、スウェーデン、ルーマニア、ハンガリー、オーストリアの計7法域。GDPRはEU規則（Regulation）として加盟国に直接かつ統一的に適用されるため、第9条の特別な種類の個人データの定義はこの7か国と「EU」で同一の条文であり、推定ではありません。<br><b>③ 具体的な条文は確認済み、ただし項目ごとの検証は未実施</b>：マカオ（個人データ保護法第7条）、スイス（revFADP第5条(c)）、ブラジル（LGPD第5条第II項）、南アフリカ（POPIA第26条）、ペルー（Ley 29733第2.5条＋2025年3月の新規則で感情／遺伝データに拡大）、オーストラリア（1988年プライバシー法第6条、犯罪歴を含む）、香港（PDPO自体には法定のセンシティブ類型がなく、身分証番号／生体情報などはプライバシー・コミッショナーの実務規範で別途規律）、米国（カリフォルニア州CCPA/CPRA第1798.140条(ae)を代表基準とし、リストを項目ごとに照合済み——身分証番号／社会保障番号、人種、宗教、労働組合への加入、性的指向、健康、遺伝、生体、金融口座、正確な位置情報はいずれもCCPAが明記するセンシティブ類型。犯罪歴と報酬はCCPAに含まれず、別の個別法で判断）、メキシコ（新法は2025年3月21日施行、第2条第VI項。概念は旧法とほぼ同じで、大部分の規定は従来の枠組みを踏襲）。これらの法域の判断根拠は公式条文または権威あるガイダンスと照合済みで、本ツールの分類とおおむね一致していますが、項目レベルの検証の深さは第①段階に及びません。<br><b>④ 類型に基づく推定、項目ごとの検証は今後</b>：ロシア、ミャンマー、ラオス。これらの法域の判断は、規制モデルの分類または確認済みの全体的な枠組みに基づくもので、第①段階と同等の項目別検証にはまだ至っていません。",
+    credLimitsH: "このレポートで代替できないもの",
+    credLimits: "本ツールは公開されている法令情報をもとに作成したもので、正式な法的助言ではありません。各国の法令は変化し続けています（特にベトナム、サウジアラビア、米国各州、メキシコ）。契約締結や大規模なデータ収集の前に、資格のある弁護士による確認を推奨します。",
+    credKnownH: "限界と既知の問題",
+    credKnown: "キーワード辞書は各項目につき一般的な中国語・英語の表現を約8〜15個収録していますが、一般的でない表現や珍しい言い回しは見落とす可能性があります。中国語・英語以外の言語の資料は現時点では識別できません。スキャンしたPDF（テキスト層なし）は抽出に対応していません。米国はカリフォルニア州CCPA/CPRAを代表基準としていますが、他州のプライバシー法には差異があり、実際には応募者が居住する州の法律が優先されます。",
+    step1Title: "対象市場を選択",
+    step1Desc: "複数選択可、地域別にグループ化、全32法域",
+    step2Title: "資料を提供",
+    step2Desc: "テキストを貼り付けるか、Word / PDF ファイルをアップロード",
+    modeText: "テキストを貼り付け",
+    modeFile: "ファイルをアップロード",
+    pastePlaceholder: "例：応募書類には氏名、性別、生年月日、身分証番号、婚姻状況、希望給与、健康状態、犯罪歴の有無の記入が必要……",
+    fileBoxText: "クリックして .docx / .pdf ファイルを1つ以上選択（一括アップロード対応）、またはここにドラッグ",
+    genBtn: "資料を分析してレポートを作成",
+    sourceSummary: "今回の分析に使用した資料の内容 — アップロード／貼り付けた内容と一致するか確認",
+    lvlPass: "収集可", lvlWarn: "要注意", lvlRestrict: "制限（センシティブ）", lvlForbid: "禁止", lvlNolaw: "専門法なし",
+    dpiaBtn: "DPIA草案を作成（Wordダウンロード付き）",
+    dpiaBtnTitle: "Web版のプレビューを作成し、Word文書を自動でダウンロードします",
+    pdfBtn: "PDFを出力（透かし入り）",
+    footer: "コンプライアンス診断 v4.1 · 最終更新 2026-10-26 · データ出典：海外採用コンプライアンス導入ガイド · 非公式のコンプライアンスツールであり法的助言ではありません。正式に利用する前に資格のある弁護士の確認を受けてください · Designed &amp; built by Henry Hu",
+    translationNote: "この日本語版は参考のために提供しています。内容に相違がある場合は中国語版が優先します。",
+    unsupportedFile: "このファイル形式には対応していません。.docx または .pdf をアップロードしてください",
+    parsing: "{n}件のファイルを解析中…",
+    uploadedSummary: "{n}件のファイルをアップロードし、合計{chars}文字を抽出しました。レポートを作成できます",
+    parseFailed: "解析に失敗しました：{err}",
+    fewChars: "⚠ {n}文字しか抽出できませんでした。スキャン文書の可能性があります",
+    extracted: "{n}文字を抽出",
+    remove: "削除",
+    manualTag: "手動追加",
+    matchedKw: "一致したキーワード：「{kw}」",
+    nolawAction: "{m}には個人情報を等級分けする専門の法律がありません。GDPRなどの成熟した枠組みを参照して「{f}」を厳格に取り扱い、収集前に応募者から個別の明示的同意を取得してください。",
+    legalBasis: "法的根拠：",
+    actPass: "{m}では「{f}」を通常どおり収集できます。プライバシーポリシーで収集目的を説明することを推奨します。",
+    actWarn: "{m}では、「{f}」は必要な段階（例：書類選考ではなく入社手続きの段階）に限って収集し、自動的な選考／不採用の判断には使用せず、プライバシーポリシーで個別に説明することを推奨します。",
+    actRestrict: "{m}では、「{f}」について次の対応が必要です：応募者の個別かつ明示的な同意（他の条項とまとめてチェックさせない）、DPIAの実施、暗号化保存などの強化された安全管理措置。",
+    actForbid: "{m}では、「{f}」は採用場面での利用が明確に禁止されており、適法な回避策はありません。フォーム／プロセスからこの項目を直接削除し、製品側で地域別にブロックしてください。",
+    customTag: "カスタム項目",
+    customNote: "この項目は本ツールの32法域分類辞書に含まれていないため、コンプライアンス上の扱いを自動判定できません。性質の近い既知の項目（センシティブ属性／健康情報など）と照らし合わせて人手で評価するか、法務に確認してから収集してください。",
+    addFromLib: "項目辞書から追加",
+    allCovered: "既知の全{n}種類の項目をすべて網羅しています",
+    missingQ: "資料の中に識別されていない項目がありますか？",
+    customPlaceholder: "辞書にない場合は、ここに項目名を入力",
+    addCustom: "カスタム項目を追加",
+    watermark: "参考用 · 法的助言ではありません",
+    pastedText: "貼り付けたテキスト",
+    uploadedParse: "アップロードファイルの解析",
+    docChars: "（{n}文字）",
+    empty: "（空）",
+    srcMulti: "今回の分析根拠：{docs}件の資料 · 合計{chars}文字 · 合計{matched}か所の項目を識別（手動追加{manual}か所、カスタム{custom}か所を含む）、要確認{risk}件 — 原文を表示して確認",
+    srcSingle: "今回の分析根拠：{src} · {chars}文字 · {matched}個の項目を識別{extra} — 原文を表示して確認",
+    srcSingleExtra: "（手動追加{manual}個、カスタム{custom}個を含む）",
+    manualSection: "手動で追加した項目",
+    autoSection: "自動識別した項目",
+    emptyDoc: "資料から既知の項目キーワードを識別できませんでした。収集している項目名をより具体的に記載するか、下で手動追加してください。",
+    noMaterial: "分析できる資料がありません。先にテキストを貼り付けるか、ファイルをアップロードしてください。",
+    batchTitle: "一括サマリー",
+    batchBody: "<b>{docs}</b>件の資料で合計 <b>{matched}</b> か所の項目を識別（手動追加 <b>{manual}</b> か所、カスタム <b>{custom}</b> か所を含む）。そのうち <b>{risk}</b> 件が選択した市場で確認を要します（要注意／制限／禁止／専門法なし）。各ファイルの詳細は下記をご覧ください。",
+    perDocRisk: "{name} — {n}個の項目を識別、要確認{risk}件",
+    perDocOk: "{name} — {n}個の項目を識別、すべて通常どおり収集可",
+    legalTooMany: "該当する市場が多いため（{n}か所）、法的根拠は第2節の一覧をご参照ください",
+    listSep: "、", legalSep: "；", colon: "：", dash: " —— ",
+    dpiaNone: "今回選択した市場では「制限（センシティブ）」レベルの項目が識別されなかったため、現時点でDPIAを作成する必要はありません。",
+    dpiaIntroLabel: "DPIAの目的と意義：",
+    dpiaIntro: "DPIAは個人データを取り扱う企業が自ら評価し、自ら保管するもので、監督機関への提出や承認は不要です。評価後も高い残存リスクがある場合にのみ、事前に監督機関と協議する必要があります。その役割は3つあります。第一に、問題が起きてから対処するのではなく、データ収集の前に必要性とリスクを検討すること。第二に、記録による説明責任の証明として、苦情、データ漏えい、監督機関の調査が発生した際に、企業が合理的な注意義務を果たしたことを示す重要な証拠となること。第三に、社内の意思決定の根拠として、リスクが高すぎて軽減が難しいと判明した場合には、それに基づき処理活動を見直すか中止すべきであることです。",
+    dpiaH0: "0. 文書の基本情報",
+    dpiaFill0: "処理活動の名称 · 作成者 · 作成日 · DPO／評価チームのメンバー（当該職位がある場合、委託企業のDPOまたは法務／コンプライアンスチームが主導）—— 要記入",
+    dpiaH1: "1. 処理活動の体系的な説明",
+    dpiaFill1: "処理の目的 · データ主体の範囲 · データのライフサイクル（収集→保存→利用→共有→削除）· 処理を支える技術アーキテクチャ —— 要記入",
+    dpiaH2: "2. 関係する法域と適用法",
+    dpiaDesc2: "今回のレポートで選択した対象市場と、それに対応する法的根拠（自動入力）：",
+    dpiaH3: "3. 制限（センシティブ）項目の一覧表",
+    dpiaDesc3: "以下の項目は対応する市場で「制限（センシティブ）」と判定されており、すべて今回のDPIAの評価範囲に含める必要があります（今回のレポートから自動集計しており、個別の段落には展開していません）：",
+    dpiaDesc3Word: "以下の項目は対応する市場で「制限（センシティブ）」と判定されており、すべて今回のDPIAの評価範囲に含める必要があります：",
+    thField: "項目", thMarkets: "該当市場", thLegal: "法的根拠",
+    dpiaH4: "4. 共通のコンプライアンス要件（上表のすべての項目に適用）",
+    dpiaReq1: "応募者から個別かつ明示的な同意を得ること。他の条項とまとめてチェックさせないこと",
+    dpiaReq2: "本DPIAを実施して記録を保管し、コンプライアンスの根拠とすること",
+    dpiaReq3: "暗号化して保存し、アクセス権限を業務上必要な職位に限定すること",
+    dpiaH5: "5. 特別な例外事項",
+    dpiaNoExceptions: "今回関係する市場には、共通要件を超える特別な例外事項はありません。",
+    dpiaH6: "6. データ主体の権利保障に関する取り決め",
+    dpiaFill6: "応募者が個人データの開示／訂正／削除および同意撤回の権利をどのように行使するか、具体的な手続きと対応期限 —— 要記入",
+    dpiaH7: "7. 協議記録と承認",
+    dpiaFill7: "DPO／外部法律顧問の意見 · 残存リスクは許容可能か · 承認者の署名と日付 · 次回見直し日 —— 要記入",
+    docTitle: "DPIA草案",
+    docSubtitle: "データ保護影響評価（草案）",
+    docNote: "本文書は「コンプライアンス診断」がレポートに基づき自動作成した初稿です。正式な評価は、委託企業のDPO（データ保護責任者、当該職位がある場合）または法務／コンプライアンスチームが主導して確認・完成させる必要があり、「要記入」と記載された部分は同チームが補完してください。本文書は正式な法的助言ではありません。",
+    docFooter: "本文書は公開されている法令情報をもとに作成したもので、正式な法的助言ではありません。コンプライアンス診断が作成した参考資料です。",
+    fileDpia: "DPIA草案_{date}",
+    fileReport: "コンプライアンス診断レポート_{date}",
+  },
+  regions: { "大中华区":"大中華圏","东南亚":"東南アジア","东北亚":"北東アジア","大洋洲":"オセアニア","欧盟":"EU","欧洲其他":"その他欧州","北美":"北米","拉美":"中南米","中东":"中東","非洲":"アフリカ" },
+  markets: { CN:"中国",HK:"香港",MO:"マカオ",SG:"シンガポール",VN:"ベトナム",ID:"インドネシア",TH:"タイ",MY:"マレーシア",PH:"フィリピン",MM:"ミャンマー",LA:"ラオス",JP:"日本",KR:"韓国",AU:"オーストラリア",EU:"EU（共通）",DE:"ドイツ",FR:"フランス",NL:"オランダ",SE:"スウェーデン",RO:"ルーマニア",HU:"ハンガリー",AT:"オーストリア",UK:"英国",CH:"スイス",RU:"ロシア",US:"米国",MX:"メキシコ",BR:"ブラジル",PE:"ペルー",SA:"サウジアラビア",AE:"UAE",ZA:"南アフリカ" },
+  cats: { "基础身份信息":"基本的な身元情報","联系方式":"連絡先","职场信息":"職務関連情報","敏感属性":"センシティブな属性","健康与生物识别":"健康・生体情報","安全与法律相关":"セキュリティ・法務関連","AI衍生数据":"AI由来データ" },
+  fields: { "姓名":"氏名","性别":"性別","出生日期/年龄":"生年月日／年齢","国籍":"国籍","身份证号/护照号":"身分証番号／パスポート番号","婚姻状况":"婚姻状況","手机号":"携帯電話番号","邮箱":"メールアドレス","住址/地址":"住所","工作履历":"職歴","学历/教育背景":"学歴","薪酬/薪资信息":"給与・報酬情報","职业技能/证书":"スキル／資格","照片/头像":"顔写真","种族/民族":"人種／民族","宗教信仰":"宗教","政治观点":"政治的見解","工会会员":"労働組合への加入","性取向":"性的指向","健康/医疗状况":"健康状態／病歴","残疾状况":"障害の有無","基因数据":"遺伝データ","生物识别(指纹/面部)":"生体情報（指紋／顔）","犯罪记录":"犯罪歴","金融/银行信息":"金融／銀行情報","社保号/税号":"社会保障番号／納税者番号","定位/行踪轨迹":"位置情報／移動履歴","面试视频录像":"面接の録画","情绪识别数据":"感情認識データ","AI评估评分":"AI評価スコア" },
+  legal: {
+    CN:"個人情報保護法（PIPL）第28条", SG:"PDPA 2012（2024年改正）", JP:"個人情報の保護に関する法律（APPI）",
+    KR:"個人情報保護法（PIPA、2023年改正）", ID:"個人データ保護法（2022年法律第27号）", MY:"PDPA 2010（2024年改正）",
+    EU:"GDPR第9条（特別な種類の個人データ）", SA:"PDPL（2023年改正版）", AE:"連邦PDPL（政令法第45/2021号）",
+    HK:"個人データ（プライバシー）条例（PDPO）第486章（法定のセンシティブ類型はなく、プライバシー・コミッショナーの実務規範／ガイダンスに依拠）", MO:"個人データ保護法（法律第8/2005号）第7条（特別な種類の個人データ）",
+    AU:"1988年プライバシー法（連邦）第6条（センシティブ情報の定義、犯罪歴を含む）", MM:"専門のデータ保護法なし（電子取引法の一部条項が適用）", LA:"専門のデータ保護法なし",
+    CH:"revFADP第5条(c)（特にセンシティブな個人データ、2023年9月施行）",
+    US:"カリフォルニア州CCPA/CPRA（民法典第1798.140条(ae)）を代表基準とする——カリフォルニア州は米国プライバシー立法の指標であり、2023年以降は従業員／応募者のデータもCCPAの適用除外ではなくなったため、採用場面を除外する多くの州法よりも参照に適している。犯罪歴や報酬などCCPAでセンシティブ類型とされていない項目は、別途の連邦／州の個別法（EEOCガイダンス、各州の給与履歴質問禁止法）に基づき判断",
+    MX:"新個人データ保護法（2025年3月20日公布／21日施行）第2条第VI項（センシティブ個人データの定義。概念は旧法とほぼ同じで、具体的な列挙は従来の枠組みを踏襲）", BR:"一般データ保護法（LGPD）第5条第II項", PE:"個人データ保護法（Ley 29733）第2条第5項＋2025年3月の新規則（DS 016-2024-JUS）で感情・遺伝データに拡大",
+    ZA:"個人情報保護法（POPIA）第26条", RU:"個人データに関する連邦法（152-FZ）第10〜11条",
+  },
+  specialNotes: { RU: "242-FZは、応募者データの「最初の保存」をロシア国内で行うことを追加で義務付けており、個別の同意だけでは要件を満たしません。データローカライゼーションの対応策を別途評価する必要があります。2026年は執行が強化されています（外国企業への制裁事例を含む）。" },
+  fieldNotes: {
+    "犯罪记录": { EU:"EUのGDPRは犯罪歴を第9条の法定の特別な種類には含めていませんが、第10条により公的な権限または必要性の根拠が求められるため、実務上は慎重な取扱いが必要です。", UK:"EUと同様に、公的な権限または必要性の根拠が必要です。" },
+    "情绪识别数据": { EU:"EU AI法第5条は2025年2月から職場での感情認識AIを明確に禁止しており、移行期間はありません。違反した場合、全世界売上高の最大7%の制裁金が科される可能性があります。", UK:"EU AI法の基準を参照し、英国の採用場面でも使用は推奨されません。" },
+  },
+};
+
+L10N["ar"] = {
+  label: "العربية",
+  ui: {
+    pageTitle: "فحص الامتثال · فحص امتثال بيانات التوظيف عبر الحدود",
+    eyebrow: "فحص الامتثال",
+    h1: "فحص امتثال بيانات التوظيف عبر الحدود",
+    sub: "الصق قائمة حقول نموذج فعلي، أو قالب عرض وظيفي، أو نموذج طلب توظيف (أو ارفع ملفات)، وستحدد الأداة تلقائيًا حقول البيانات التي يتم جمعها، وتخبرك حقلًا بحقل ما إذا كان يجوز جمعه في الأسواق المستهدفة وما الذي ينبغي تعديله.",
+    metaCutoff: "البيانات محدثة حتى: 2026-07-31",
+    metaCoverage: "التغطية: {m} ولاية قضائية · {f} نوعًا من الحقول",
+    metaMethod: "طريقة التعرف: مطابقة الكلمات المفتاحية (وليس فهمًا دلاليًا)",
+    credSummary: "على أي أساس يستند هذا التقرير، ولماذا يمكن الوثوق به؟ — اعرض المنهجية والقيود",
+    credSourcesH: "مصادر البيانات التنظيمية",
+    credSources: "يغطي 32 ولاية قضائية في 10 مناطق: الصين الكبرى، وجنوب شرق آسيا، وشمال شرق آسيا، وأوقيانوسيا، والاتحاد الأوروبي، وبقية أوروبا، وأمريكا الشمالية، وأمريكا اللاتينية، والشرق الأوسط، وأفريقيا. ويُذكر الأساس القانوني المحدد أسفل كل توصية.",
+    credStdH: "معايير التصنيف (خاصة بالتوظيف)",
+    credStdPass: "<b>مسموح</b> — بيانات شخصية عادية؛ يجوز جمعها متى توفر أساس قانوني (ضرورة تعاقدية / إشعار وموافقة)",
+    credStdWarn: "<b>يتطلب الحذر</b> — ليست فئة حساسة بموجب القانون لكنها تنطوي على خطر التمييز؛ تُجمع فقط في المرحلة الضرورية ولا تُستخدم للاستبعاد الآلي",
+    credStdRestrict: "<b>مقيّد (حساس)</b> — بيانات شخصية حساسة بموجب القانون؛ تتطلب موافقة مستقلة + تقييم أثر حماية البيانات (DPIA) + تدابير أمنية معززة",
+    credStdForbid: "<b>محظور</b> — يحظر القانون صراحةً استخدامها في التوظيف؛ ولا يوجد بديل متوافق",
+    credTierH: "مدى التحقق من بيانات كل ولاية قضائية (تصنيف صريح)",
+    credTierBody: "لا يتساوى عمق التحقق بين الولايات القضائية، وهو مقسّم إلى أربع درجات:<br><b>① تم التحقق حقلًا بحقل</b>: الصين، وسنغافورة، واليابان، وكوريا الجنوبية، وفيتنام، وإندونيسيا، وتايلاند، وماليزيا، والفلبين، والاتحاد الأوروبي (عام)، والمملكة المتحدة، والمملكة العربية السعودية، والإمارات العربية المتحدة — 13 ولاية قضائية في المجموع.<br><b>② النص القانوني نفسه المطبق في الاتحاد الأوروبي</b>: ألمانيا، وفرنسا، وهولندا، والسويد، ورومانيا، والمجر، والنمسا — 7 ولايات قضائية. فاللائحة العامة لحماية البيانات (GDPR) لائحة أوروبية (Regulation) تُطبق مباشرةً وبشكل موحد في الدول الأعضاء، لذا فإن تعريف الفئات الخاصة من البيانات الشخصية في المادة 9 هو الحكم ذاته لهذه الدول السبع و\"الاتحاد الأوروبي\" — وليس تقديرًا.<br><b>③ تمت مراجعة نصوص قانونية محددة دون التحقق حقلًا بحقل</b>: ماكاو (قانون حماية البيانات الشخصية، المادة 7)، وسويسرا (revFADP المادة 5(ج))، والبرازيل (LGPD المادة 5 البند II)، وجنوب أفريقيا (POPIA المادة 26)، وبيرو (القانون 29733 المادة 2.5 + لائحة مارس 2025 التي وسّعت النطاق ليشمل البيانات العاطفية/الجينية)، وأستراليا (قانون الخصوصية لعام 1988 المادة 6، بما في ذلك السوابق الجنائية)، وهونغ كونغ (لا يتضمن قانون PDPO ذاته فئات حساسة قانونية؛ وتُنظَّم أرقام الهوية والبيانات البيومترية وغيرها بشكل منفصل عبر مدونات الممارسة الصادرة عن مفوض الخصوصية)، والولايات المتحدة (اعتُمد قانون CCPA/CPRA في كاليفورنيا §1798.140(ae) معيارًا تمثيليًا وروجعت قائمته بندًا ببند — فأرقام الهوية/الضمان الاجتماعي، والعرق، والدين، وعضوية النقابات، والتوجه الجنسي، والصحة، والبيانات الجينية، والبيومترية، والحسابات المالية، والموقع الدقيق كلها فئات حساسة منصوص عليها صراحةً في CCPA؛ أما السوابق الجنائية والأجور فليست مدرجة فيه وتُقيَّم وفق قوانين متخصصة أخرى)، والمكسيك (القانون الجديد نافذ منذ 21 مارس 2025، المادة 2 البند VI؛ مفاهيمه متوافقة إلى حد كبير مع القانون السابق، ومعظم أحكامه تتبع الإطار السابق). وقد طوبقت أسس التقييم لهذه الولايات القضائية مع النصوص الرسمية أو الإرشادات المعتمدة، وهي متسقة عمومًا مع تصنيف الأداة، لكن عمق التحقق على مستوى الحقول يظل أدنى من الدرجة ①.<br><b>④ تقدير بحسب التصنيف، بانتظار التحقق بندًا ببند</b>: روسيا، وميانمار، ولاوس. يستند التقييم لهذه الولايات القضائية إلى تصنيف النموذج التنظيمي أو إلى إطار عام تم التحقق منه، ولم يبلغ بعد مستوى التحقق حقلًا بحقل في الدرجة ①.",
+    credLimitsH: "ما لا يمكن لهذا التقرير أن يحل محله",
+    credLimits: "أُعدّت هذه الأداة استنادًا إلى معلومات تنظيمية متاحة للعموم، ولا تُعد استشارة قانونية رسمية. والأنظمة في تغير مستمر (لا سيما في فيتنام والمملكة العربية السعودية والولايات الأمريكية والمكسيك)؛ لذا يُنصح بمراجعة محامٍ مؤهل قبل توقيع العقود أو جمع البيانات على نطاق واسع.",
+    credKnownH: "القيود والمشكلات المعروفة",
+    credKnown: "يغطي قاموس الكلمات المفتاحية نحو 8 إلى 15 تعبيرًا شائعًا بالصينية والإنجليزية لكل حقل، لذا قد تفوته التعابير غير المألوفة أو النادرة؛ ولا يمكن حاليًا التعرف على المستندات بلغات غير الصينية والإنجليزية؛ ولا يُدعم استخراج النص من ملفات PDF الممسوحة ضوئيًا (التي لا تحتوي على طبقة نصية)؛ وبالنسبة للولايات المتحدة، يُعتمد قانون CCPA/CPRA في كاليفورنيا معيارًا تمثيليًا — وتختلف قوانين الخصوصية في الولايات الأخرى، ويسري قانون الولاية التي يقيم فيها المرشح.",
+    step1Title: "اختر الأسواق المستهدفة",
+    step1Desc: "يمكن اختيار أكثر من سوق، مصنفة حسب المنطقة — 32 ولاية قضائية في المجموع",
+    step2Title: "قدّم المستندات",
+    step2Desc: "الصق نصًا، أو ارفع ملفات Word / PDF",
+    modeText: "لصق نص",
+    modeFile: "رفع ملفات",
+    pastePlaceholder: "مثال: يتطلب نموذج طلب التوظيف إدخال الاسم، والجنس، وتاريخ الميلاد، ورقم الهوية، والحالة الاجتماعية، والراتب المتوقع، والحالة الصحية، ووجود سوابق جنائية من عدمه…",
+    fileBoxText: "انقر لاختيار ملف أو أكثر بصيغة .docx / .pdf (يدعم الرفع الجماعي)، أو اسحبها إلى هنا",
+    genBtn: "حلّل المستندات وأنشئ التقرير",
+    sourceSummary: "محتوى المستندات المستخدم في هذا التحليل — اعرضه للتأكد من مطابقته لما رفعته أو لصقته",
+    lvlPass: "مسموح", lvlWarn: "يتطلب الحذر", lvlRestrict: "مقيّد (حساس)", lvlForbid: "محظور", lvlNolaw: "لا يوجد قانون خاص",
+    dpiaBtn: "إنشاء مسودة DPIA (مع تنزيل Word)",
+    dpiaBtnTitle: "ينشئ معاينة على الويب وينزّل مستند Word تلقائيًا",
+    pdfBtn: "تصدير PDF (بعلامة مائية)",
+    footer: "فحص الامتثال الإصدار 4.1 · آخر تحديث 2026-10-26 · البيانات مستمدة من دليل تطبيق الامتثال في التوظيف الخارجي · أداة امتثال غير رسمية وليست استشارة قانونية؛ يُرجى مراجعة محامٍ مؤهل قبل الاستخدام الرسمي · Designed &amp; built by Henry Hu",
+    translationNote: "تُقدَّم هذه النسخة العربية للتيسير فقط، وفي حال وجود أي تعارض تكون النسخة الصينية هي المعتمدة.",
+    unsupportedFile: "صيغة الملف غير مدعومة. يُرجى رفع ملف .docx أو .pdf",
+    parsing: "جارٍ تحليل {n} ملف…",
+    uploadedSummary: "تم رفع {n} ملف واستخراج {chars} حرفًا في المجموع — يمكنك الآن إنشاء التقرير",
+    parseFailed: "فشل التحليل: {err}",
+    fewChars: "⚠ تم استخراج {n} حرف فقط — قد يكون المستند ممسوحًا ضوئيًا",
+    extracted: "تم استخراج {n} حرف",
+    remove: "إزالة",
+    manualTag: "أُضيف يدويًا",
+    matchedKw: "الكلمة المفتاحية المطابقة: «{kw}»",
+    nolawAction: "لا يوجد في {m} تشريع مخصص لتصنيف البيانات الشخصية. يُنصح بالتعامل مع «{f}» بصرامة استنادًا إلى أطر ناضجة مثل اللائحة العامة لحماية البيانات (GDPR)، والحصول على موافقة صريحة ومستقلة من المرشح قبل الجمع.",
+    legalBasis: "الأساس القانوني: ",
+    actPass: "في {m}، يجوز جمع «{f}» بشكل اعتيادي؛ ويُنصح بتوضيح الغرض من الجمع في سياسة الخصوصية.",
+    actWarn: "في {m}، يُنصح بجمع «{f}» في المرحلة الضرورية فقط (مثلًا عند التعيين لا عند الفرز الأولي)، وعدم استخدامه في قرارات الفرز أو الاستبعاد الآلية، وتوضيحه بشكل مستقل في سياسة الخصوصية.",
+    actRestrict: "في {m}، يتطلب «{f}»: موافقة صريحة ومستقلة من المرشح (لا تُدمج مع شروط أخرى)، وإجراء تقييم أثر حماية البيانات (DPIA)، واتخاذ تدابير أمنية معززة مثل التخزين المشفّر.",
+    actForbid: "في {m}، يُحظر صراحةً استخدام «{f}» في التوظيف، ولا يوجد بديل متوافق. يجب حذف هذا الحقل من النماذج والإجراءات، وحجبه حسب المنطقة على مستوى المنتج.",
+    customTag: "حقل مخصص",
+    customNote: "هذا الحقل غير موجود في مكتبة التصنيف الخاصة بالأداة والتي تغطي 32 ولاية قضائية، لذا لا يمكن تحديد حالة امتثاله تلقائيًا. يُنصح بتقييمه يدويًا بمقارنته بحقول معروفة مشابهة (مثل فئة السمات الحساسة أو المعلومات الصحية)، أو استشارة الفريق القانوني قبل جمعه.",
+    addFromLib: "أضف من مكتبة الحقول",
+    allCovered: "تمت تغطية جميع أنواع الحقول المعروفة البالغ عددها {n}",
+    missingQ: "هل توجد حقول في المستندات لم يتم التعرف عليها؟",
+    customPlaceholder: "غير موجود في المكتبة؟ أدخل اسم الحقل هنا",
+    addCustom: "أضف حقلًا مخصصًا",
+    watermark: "للاسترشاد فقط · ليست استشارة قانونية",
+    pastedText: "النص الملصق",
+    uploadedParse: "تحليل الملفات المرفوعة",
+    docChars: " ({n} حرف)",
+    empty: "(فارغ)",
+    srcMulti: "أساس هذا التحليل: {docs} مستندات · {chars} حرفًا في المجموع · تم التعرف على {matched} موضعًا لحقول (منها {manual} أُضيفت يدويًا و{custom} مخصصة)، و{risk} بندًا يحتاج إلى انتباه — اعرض المحتوى الأصلي للتحقق",
+    srcSingle: "أساس هذا التحليل: {src} · {chars} حرفًا · تم التعرف على {matched} حقلًا{extra} — اعرض المحتوى الأصلي للتحقق",
+    srcSingleExtra: " (منها {manual} أُضيفت يدويًا و{custom} مخصصة)",
+    manualSection: "الحقول المضافة يدويًا",
+    autoSection: "الحقول المكتشفة تلقائيًا",
+    emptyDoc: "لم يتم التعرف على أي كلمات مفتاحية لحقول معروفة في المستندات. حاول وصف أسماء الحقول التي تُجمع بشكل أدق، أو أضفها يدويًا أدناه.",
+    noMaterial: "لا توجد مستندات لتحليلها. يُرجى لصق نص أو رفع ملفات أولًا.",
+    batchTitle: "ملخص جماعي",
+    batchBody: "<b>{docs}</b> مستندات، تم التعرف فيها على <b>{matched}</b> موضعًا لحقول (منها <b>{manual}</b> أُضيفت يدويًا و<b>{custom}</b> مخصصة)، ومن بينها <b>{risk}</b> بندًا يحتاج إلى انتباه في الأسواق المختارة (يتطلب الحذر / مقيّد / محظور / لا يوجد قانون خاص). انظر تفاصيل كل ملف أدناه.",
+    perDocRisk: "{name} — تم التعرف على {n} حقلًا، منها {risk} تحتاج إلى انتباه",
+    perDocOk: "{name} — تم التعرف على {n} حقلًا، وجميعها يجوز جمعها بشكل اعتيادي",
+    legalTooMany: "الأسواق المعنية كثيرة ({n})؛ راجع القائمة الكاملة للأسس القانونية في القسم 2",
+    listSep: "، ", legalSep: "؛ ", colon: ": ", dash: " — ",
+    dpiaNone: "لم يتم التعرف على أي حقل بمستوى «مقيّد (حساس)» في الأسواق المختارة، لذا لا حاجة حاليًا لإعداد تقييم أثر حماية البيانات.",
+    dpiaIntroLabel: "الغرض من تقييم أثر حماية البيانات (DPIA) وقيمته: ",
+    dpiaIntro: "تُجري الشركة التي تعالج البيانات الشخصية هذا التقييم وتحتفظ به بنفسها، ولا يلزم تقديمه إلى الجهة الرقابية للموافقة عليه، ولا تلزم الاستشارة المسبقة للجهة الرقابية إلا إذا ظلت المخاطر المتبقية مرتفعة بعد التقييم. وله ثلاث وظائف: أولًا، التفكير مسبقًا في الضرورة والمخاطر قبل جمع البيانات بدلًا من المعالجة بعد وقوع المشكلة؛ ثانيًا، توثيق يثبت المساءلة — ففي حال وقوع شكوى أو تسرب بيانات أو تفتيش رقابي، يُعد التقييم دليلًا أساسيًا على أن الشركة بذلت العناية المعقولة؛ ثالثًا، أساس لاتخاذ القرار داخليًا — فإذا تبيّن أن المخاطر مرتفعة فعلًا ويصعب تخفيفها، ينبغي للشركة تعديل نشاط المعالجة أو التخلي عنه.",
+    dpiaH0: "0. المعلومات الأساسية للمستند",
+    dpiaFill0: "اسم نشاط المعالجة · المُعِدّ · تاريخ الإعداد · مسؤول حماية البيانات / أعضاء فريق التقييم (إن وُجدت هذه الوظيفة، يقود العمل مسؤول حماية البيانات أو الفريق القانوني/فريق الامتثال لدى الشركة العميلة) — يُستكمل لاحقًا",
+    dpiaH1: "1. وصف منهجي لنشاط المعالجة",
+    dpiaFill1: "أغراض المعالجة · نطاق أصحاب البيانات · دورة حياة البيانات (الجمع ← التخزين ← الاستخدام ← المشاركة ← الحذف) · البنية التقنية الداعمة للمعالجة — يُستكمل لاحقًا",
+    dpiaH2: "2. الولايات القضائية المعنية والأساس القانوني المطبق",
+    dpiaDesc2: "فيما يلي الأسواق المستهدفة المختارة في هذا التقرير والأسس القانونية المقابلة لها (تُدرج تلقائيًا):",
+    dpiaH3: "3. جدول عام بالحقول المقيّدة (الحساسة)",
+    dpiaDesc3: "صُنِّفت الحقول التالية على أنها «مقيّدة (حساسة)» في الأسواق المقابلة، ويجب إدراجها جميعًا ضمن نطاق هذا التقييم (لُخِّصت تلقائيًا من هذا التقرير دون تفصيلها في أقسام مستقلة):",
+    dpiaDesc3Word: "صُنِّفت الحقول التالية على أنها «مقيّدة (حساسة)» في الأسواق المقابلة، ويجب إدراجها جميعًا ضمن نطاق هذا التقييم:",
+    thField: "الحقل", thMarkets: "الأسواق المعنية", thLegal: "الأساس القانوني",
+    dpiaH4: "4. متطلبات الامتثال العامة (تنطبق على جميع البنود أعلاه)",
+    dpiaReq1: "يجب الحصول على موافقة صريحة ومستقلة من المرشح، وعدم دمجها مع شروط أخرى",
+    dpiaReq2: "استكمال هذا التقييم والاحتفاظ بسجلاته دليلًا على الامتثال",
+    dpiaReq3: "التخزين المشفّر، وقصر صلاحيات الوصول على الوظائف التي تحتاجها لأغراض العمل",
+    dpiaH5: "5. الاستثناءات الخاصة",
+    dpiaNoExceptions: "لا توجد في الأسواق المعنية هذه المرة استثناءات خاصة تتجاوز المتطلبات العامة.",
+    dpiaH6: "6. ترتيبات ضمان حقوق أصحاب البيانات",
+    dpiaFill6: "كيفية ممارسة المرشحين لحقوقهم في الاطلاع على بياناتهم الشخصية وتصحيحها وحذفها وسحب الموافقة، مع الإجراءات المحددة ومهل الاستجابة — يُستكمل لاحقًا",
+    dpiaH7: "7. سجل الاستشارات والاعتماد",
+    dpiaFill7: "رأي مسؤول حماية البيانات / المستشار القانوني الخارجي · هل المخاطر المتبقية مقبولة · توقيع المعتمِد والتاريخ · موعد المراجعة التالية — يُستكمل لاحقًا",
+    docTitle: "مسودة تقييم أثر حماية البيانات",
+    docSubtitle: "تقييم أثر حماية البيانات الشخصية (مسودة)",
+    docNote: "هذا المستند مسودة أولى أنشأتها أداة «فحص الامتثال» تلقائيًا استنادًا إلى التقرير. ويجب أن يقود مراجعة التقييم الرسمي واستكماله مسؤول حماية البيانات لدى الشركة العميلة (إن وُجدت هذه الوظيفة) أو فريقها القانوني/فريق الامتثال، وأن يستكمل الأجزاء المعلَّمة بعبارة «يُستكمل لاحقًا». ولا يُعد هذا المستند استشارة قانونية رسمية.",
+    docFooter: "أُعدّ هذا المستند استنادًا إلى معلومات تنظيمية متاحة للعموم، ولا يُعد استشارة قانونية رسمية؛ وقد أنشأته أداة فحص الامتثال للاسترشاد فقط.",
+    fileDpia: "مسودة_DPIA_{date}",
+    fileReport: "تقرير_الامتثال_{date}",
+  },
+  regions: { "大中华区":"الصين الكبرى","东南亚":"جنوب شرق آسيا","东北亚":"شمال شرق آسيا","大洋洲":"أوقيانوسيا","欧盟":"الاتحاد الأوروبي","欧洲其他":"بقية أوروبا","北美":"أمريكا الشمالية","拉美":"أمريكا اللاتينية","中东":"الشرق الأوسط","非洲":"أفريقيا" },
+  markets: { CN:"الصين",HK:"هونغ كونغ",MO:"ماكاو",SG:"سنغافورة",VN:"فيتنام",ID:"إندونيسيا",TH:"تايلاند",MY:"ماليزيا",PH:"الفلبين",MM:"ميانمار",LA:"لاوس",JP:"اليابان",KR:"كوريا الجنوبية",AU:"أستراليا",EU:"الاتحاد الأوروبي (عام)",DE:"ألمانيا",FR:"فرنسا",NL:"هولندا",SE:"السويد",RO:"رومانيا",HU:"المجر",AT:"النمسا",UK:"المملكة المتحدة",CH:"سويسرا",RU:"روسيا",US:"الولايات المتحدة",MX:"المكسيك",BR:"البرازيل",PE:"بيرو",SA:"المملكة العربية السعودية",AE:"الإمارات العربية المتحدة",ZA:"جنوب أفريقيا" },
+  cats: { "基础身份信息":"بيانات الهوية الأساسية","联系方式":"بيانات الاتصال","职场信息":"المعلومات المهنية","敏感属性":"السمات الحساسة","健康与生物识别":"الصحة والبيانات البيومترية","安全与法律相关":"الأمن والشؤون القانونية","AI衍生数据":"بيانات مشتقة من الذكاء الاصطناعي" },
+  fields: { "姓名":"الاسم","性别":"الجنس","出生日期/年龄":"تاريخ الميلاد / العمر","国籍":"الجنسية","身份证号/护照号":"رقم الهوية / جواز السفر","婚姻状况":"الحالة الاجتماعية","手机号":"رقم الهاتف المحمول","邮箱":"البريد الإلكتروني","住址/地址":"عنوان السكن","工作履历":"الخبرة العملية","学历/教育背景":"المؤهل العلمي","薪酬/薪资信息":"الراتب / التعويضات","职业技能/证书":"المهارات / الشهادات","照片/头像":"الصورة الشخصية","种族/民族":"العرق / الأصل الإثني","宗教信仰":"الدين","政治观点":"الآراء السياسية","工会会员":"عضوية النقابات","性取向":"التوجه الجنسي","健康/医疗状况":"الحالة الصحية / الطبية","残疾状况":"الإعاقة","基因数据":"البيانات الجينية","生物识别(指纹/面部)":"البيانات البيومترية (البصمة / الوجه)","犯罪记录":"السوابق الجنائية","金融/银行信息":"المعلومات المالية / المصرفية","社保号/税号":"رقم الضمان الاجتماعي / الرقم الضريبي","定位/行踪轨迹":"الموقع / سجل التنقلات","面试视频录像":"تسجيلات فيديو المقابلات","情绪识别数据":"بيانات التعرف على المشاعر","AI评估评分":"درجات التقييم بالذكاء الاصطناعي" },
+  legal: {
+    CN:"قانون حماية المعلومات الشخصية (PIPL)، المادة 28", SG:"PDPA 2012 (تعديلات 2024)", JP:"APPI (قانون حماية المعلومات الشخصية)",
+    KR:"PIPA (قانون حماية المعلومات الشخصية، المعدل في 2023)", VN:"قانون حماية البيانات الشخصية 2025 + المرسوم 356", ID:"قانون حماية البيانات الشخصية (القانون رقم 27 لسنة 2022)", MY:"PDPA 2010 (تعديلات 2024)",
+    EU:"اللائحة العامة لحماية البيانات (GDPR)، المادة 9 (الفئات الخاصة من البيانات الشخصية)", UK:"UK GDPR + قانون حماية البيانات 2018", SA:"نظام حماية البيانات الشخصية (PDPL، النسخة المعدلة 2023)", AE:"المرسوم بقانون اتحادي رقم 45 لسنة 2021 بشأن حماية البيانات الشخصية",
+    HK:"قانون البيانات الشخصية (الخصوصية) (PDPO)، الفصل 486 (لا يتضمن فئات بيانات حساسة قانونية؛ ويعتمد على مدونات الممارسة/إرشادات مفوض الخصوصية)", MO:"قانون حماية البيانات الشخصية (القانون رقم 8/2005)، المادة 7 (الفئات الخاصة من البيانات الشخصية)",
+    AU:"قانون الخصوصية لعام 1988 (الكومنولث)، المادة 6 (تعريف المعلومات الحساسة، بما في ذلك السوابق الجنائية)", MM:"لا يوجد قانون مخصص لحماية البيانات (تنطبق بعض أحكام قانون المعاملات الإلكترونية)", LA:"لا يوجد قانون مخصص لحماية البيانات",
+    CH:"revFADP المادة 5(ج) (البيانات الشخصية الحساسة؛ نافذ منذ سبتمبر 2023)",
+    US:"اعتُمد قانون CCPA/CPRA في كاليفورنيا (القانون المدني §1798.140(ae)) معيارًا تمثيليًا — فكاليفورنيا مؤشر تشريعات الخصوصية في الولايات المتحدة، ومنذ 2023 لم تعد بيانات الموظفين/المتقدمين للوظائف مستثناة من CCPA، ما يجعله مرجعًا أنسب من كثير من قوانين الولايات التي تستثني التوظيف؛ أما الحقول غير المصنفة حساسة في CCPA، مثل السوابق الجنائية والأجور، فتُقيَّم بشكل منفصل وفق قوانين اتحادية/ولائية متخصصة (إرشادات EEOC، وقوانين الولايات التي تحظر السؤال عن سجل الرواتب)",
+    MX:"قانون حماية البيانات الشخصية الجديد (نُشر في 20 مارس 2025 / نافذ منذ 21 مارس 2025)، المادة 2 البند VI (تعريف البيانات الشخصية الحساسة؛ مفاهيمه متوافقة إلى حد كبير مع القانون السابق، وقائمة التعداد تتبع الإطار السابق)", BR:"القانون العام لحماية البيانات (LGPD)، المادة 5 البند II", PE:"قانون حماية البيانات الشخصية (القانون 29733)، المادة 2 البند 5 + لائحة مارس 2025 (DS 016-2024-JUS) التي وسّعت النطاق ليشمل البيانات العاطفية والجينية",
+    ZA:"قانون حماية المعلومات الشخصية (POPIA)، المادة 26", RU:"القانون الاتحادي بشأن البيانات الشخصية (152-FZ)، المادتان 10 و11",
+  },
+  specialNotes: { RU: "يشترط القانون 242-FZ أيضًا أن يتم «التخزين الأول» لبيانات المرشحين داخل روسيا؛ ولا تكفي الموافقة المستقلة وحدها لتحقيق الامتثال، بل يلزم تقييم حل لتوطين البيانات. ويشهد عام 2026 تشددًا في التطبيق (بما في ذلك سوابق فرض عقوبات على شركات أجنبية)." },
+  fieldNotes: {
+    "犯罪记录": { EU:"لا تدرج اللائحة العامة لحماية البيانات (GDPR) السوابق الجنائية ضمن الفئات الخاصة في المادة 9، لكن المادة 10 تشترط وجود سلطة رسمية أو مبرر للضرورة، لذا ينبغي التعامل معها بحذر من الناحية العملية.", UK:"كما في الاتحاد الأوروبي — يلزم وجود سلطة رسمية أو مبرر للضرورة." },
+    "情绪识别数据": { EU:"تحظر المادة 5 من قانون الذكاء الاصطناعي الأوروبي صراحةً أنظمة التعرف على المشاعر في مكان العمل منذ فبراير 2025 دون فترة انتقالية؛ وقد تصل الغرامة على المخالفة إلى 7% من حجم المبيعات العالمي.", UK:"استنادًا إلى معايير قانون الذكاء الاصطناعي الأوروبي، لا يُنصح كذلك باستخدامها في التوظيف في المملكة المتحدة." },
+  },
+};
+
+
+const LANG_ORDER = ["zh-CN", "zh-HK", "en", "vi", "id", "ja", "ar"];
+const RTL_LANGS = new Set(["ar"]);
+const CJK_LANGS = new Set(["zh-CN", "zh-HK", "ja"]);
+let currentLang = "zh-CN";
+
+function availableLangs(){ return LANG_ORDER.filter(l => L10N[l]); }
+function pack(){ return L10N[currentLang] || L10N["zh-CN"]; }
+
+// 取界面文案：当前语言 → 中文兜底；{变量} 原样替换（调用方负责对用户输入做 escapeHtml）
+function t(key, vars){
+  let s = pack().ui[key];
+  if (s === undefined) s = L10N["zh-CN"].ui[key];
+  if (s === undefined) s = key;
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+  return s;
+}
+const mName  = (m)    => (pack().markets && pack().markets[m.code]) || m.name;
+const fName  = (name) => (pack().fields && pack().fields[name]) || name;
+const cName  = (cat)  => (pack().cats && pack().cats[cat]) || cat;
+const rName  = (r)    => (pack().regions && pack().regions[r]) || r;
+const legalOf = (code) => (pack().legal && pack().legal[code]) || MARKET_LEGAL[code];
+const specialNoteOf = (code) => (pack().specialNotes && pack().specialNotes[code]) || MARKET_SPECIAL_NOTE[code];
+const fieldNoteOf = (f, code) => {
+  const tr = pack().fieldNotes && pack().fieldNotes[f.name] && pack().fieldNotes[f.name][code];
+  return tr || (f.note && f.note[code]) || "";
+};
+const LEVEL_KEY = { pass:"lvlPass", warn:"lvlWarn", restrict:"lvlRestrict", forbid:"lvlForbid", nolaw:"lvlNolaw" };
+const ACTION_KEY = { pass:"actPass", warn:"actWarn", restrict:"actRestrict", forbid:"actForbid" };
+const levelLabel = (lvl) => t(LEVEL_KEY[lvl]);
+
+// 把浏览器语言代码归一到我们支持的语言
+function normalizeLang(code){
+  if (!code) return null;
+  const c = String(code).toLowerCase();
+  if (c === "yue" || c.startsWith("yue-")) return "zh-HK";
+  if (c.startsWith("zh")) return /hk|mo|tw|hant/.test(c) ? "zh-HK" : "zh-CN";
+  if (c.startsWith("en")) return "en";
+  if (c.startsWith("vi")) return "vi";
+  if (c === "id" || c.startsWith("id-") || c === "in") return "id";
+  if (c.startsWith("ja")) return "ja";
+  if (c.startsWith("ar")) return "ar";
+  return null;
+}
+// 尚未提供的语言按就近原则兜底（如繁体暂缺时先用简体）
+function resolveLang(code){
+  const n = normalizeLang(code);
+  if (!n) return null;
+  if (L10N[n]) return n;
+  if (n === "zh-HK" && L10N["zh-CN"]) return "zh-CN";
+  return null;
+}
+function detectLang(){
+  try {
+    const p = resolveLang(new URLSearchParams(location.search).get("lang"));
+    if (p) return p;
+  } catch (e) {}
+  try {
+    const saved = resolveLang(localStorage.getItem("cc-lang"));
+    if (saved) return saved;
+  } catch (e) {}
+  for (const l of (navigator.languages || [navigator.language])) {
+    const r = resolveLang(l);
+    if (r) return r;
+  }
+  return "en";
+}
+
+// 页面加载时，从HTML里读取静态文案的中文原文，作为zh-CN的来源
+function captureSourceStrings(){
+  const zh = L10N["zh-CN"].ui;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const k = el.dataset.i18n;
+    if (zh[k] === undefined) zh[k] = el.innerHTML.trim();
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const k = el.dataset.i18nPlaceholder;
+    if (zh[k] === undefined) zh[k] = el.getAttribute("placeholder");
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const k = el.dataset.i18nTitle;
+    if (zh[k] === undefined) zh[k] = el.getAttribute("title");
+  });
+}
+// 静态文案全部来自我们自己维护的词典（可信内容），所以可以用 innerHTML 保留 <b>、<br> 等格式
+function applyStaticStrings(){
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.setAttribute("placeholder", t(el.dataset.i18nPlaceholder)); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => { el.setAttribute("title", t(el.dataset.i18nTitle)); });
+  document.getElementById("metaCoverage").textContent = t("metaCoverage", { m: MARKET_META.length, f: FIELD_DATA.length });
+  const note = t("translationNote");
+  const noteEl = document.getElementById("translationNote");
+  noteEl.textContent = note;
+  noteEl.style.display = note ? "block" : "none";
+}
+function renderLangSelect(){
+  const sel = document.getElementById("langSelect");
+  sel.innerHTML = availableLangs().map(l => `<option value="${l}">${L10N[l].label}</option>`).join("");
+  sel.value = currentLang;
+  sel.onchange = () => setLang(sel.value, true);
+}
+
+let lastFileStatus = null; // { key, vars } —— 切换语言时重新渲染上传状态
+function setFileStatus(key, vars){
+  lastFileStatus = key ? { key, vars } : null;
+  document.getElementById("fileStatus").textContent = key ? t(key, vars) : "";
+}
+
+function setLang(lang, byUser){
+  if (!L10N[lang]) return;
+  currentLang = lang;
+  const html = document.documentElement;
+  html.lang = lang;
+  html.dir = RTL_LANGS.has(lang) ? "rtl" : "ltr";
+  document.title = t("pageTitle");
+  applyStaticStrings();
+  document.getElementById("langSelect").value = lang;
+  renderMarketChips();
+  renderFileList();
+  if (lastFileStatus) setFileStatus(lastFileStatus.key, lastFileStatus.vars);
+  if (document.getElementById("report").style.display === "block") generateReport(false);
+  if (document.getElementById("dpiaSection").style.display === "block") renderDPIA(computeDPIAData());
+  if (byUser) {
+    try { localStorage.setItem("cc-lang", lang); } catch (e) {}
+    try {
+      const url = new URL(location.href);
+      url.searchParams.set("lang", lang);
+      history.replaceState(null, "", url);
+    } catch (e) {}
+  }
+}
+// ================= 多语言框架结束 =================
+
+const REGION_ORDER = ["大中华区","东南亚","东北亚","大洋洲","欧盟","欧洲其他","北美","拉美","中东","非洲"];
+
+const MARKET_META = [
+  { code:"CN", name:"中国", group:"大中华区", mode:"explicit" },
+  { code:"HK", name:"香港", group:"大中华区", mode:"custom", overrides:{"身份证号/护照号":"敏感","健康/医疗状况":"增强","残疾状况":"增强","基因数据":"增强","生物识别(指纹/面部)":"增强","犯罪记录":"增强","种族/民族":"增强","情绪识别数据":"增强","面试视频录像":"增强"} },
+  { code:"MO", name:"澳门", group:"大中华区", mode:"proxy_eu" },
+  { code:"SG", name:"新加坡", group:"东南亚", mode:"explicit" },
+  { code:"VN", name:"越南", group:"东南亚", mode:"explicit" },
+  { code:"ID", name:"印尼", group:"东南亚", mode:"explicit" },
+  { code:"TH", name:"泰国", group:"东南亚", mode:"explicit" },
+  { code:"MY", name:"马来西亚", group:"东南亚", mode:"explicit" },
+  { code:"PH", name:"菲律宾", group:"东南亚", mode:"explicit" },
+  { code:"MM", name:"缅甸", group:"东南亚", mode:"no_law" },
+  { code:"LA", name:"老挝", group:"东南亚", mode:"no_law" },
+  { code:"JP", name:"日本", group:"东北亚", mode:"explicit" },
+  { code:"KR", name:"韩国", group:"东北亚", mode:"explicit" },
+  { code:"AU", name:"澳洲", group:"大洋洲", mode:"proxy_eu", overrides:{"犯罪记录":"敏感","情绪识别数据":"增强"} },
+  { code:"EU", name:"欧盟(通用)", group:"欧盟", mode:"explicit" },
+  { code:"DE", name:"德国", group:"欧盟", mode:"proxy_eu" },
+  { code:"FR", name:"法国", group:"欧盟", mode:"proxy_eu" },
+  { code:"NL", name:"荷兰", group:"欧盟", mode:"proxy_eu" },
+  { code:"SE", name:"瑞典", group:"欧盟", mode:"proxy_eu" },
+  { code:"RO", name:"罗马尼亚", group:"欧盟", mode:"proxy_eu" },
+  { code:"HU", name:"匈牙利", group:"欧盟", mode:"proxy_eu" },
+  { code:"AT", name:"奥地利", group:"欧盟", mode:"proxy_eu" },
+  { code:"UK", name:"英国", group:"欧洲其他", mode:"explicit" },
+  { code:"CH", name:"瑞士", group:"欧洲其他", mode:"proxy_eu" },
+  { code:"RU", name:"俄罗斯", group:"欧洲其他", mode:"custom", overrides:{"姓名":"一般","身份证号/护照号":"敏感","性别":"增强","出生日期/年龄":"增强","国籍":"一般","婚姻状况":"增强","手机号":"一般","邮箱":"一般","住址/地址":"增强","工作履历":"一般","学历/教育背景":"一般","薪酬/薪资信息":"增强","职业技能/证书":"一般","照片/头像":"增强","种族/民族":"敏感","宗教信仰":"敏感","政治观点":"敏感","工会会员":"增强","性取向":"敏感","健康/医疗状况":"敏感","残疾状况":"敏感","基因数据":"敏感","生物识别(指纹/面部)":"敏感","犯罪记录":"增强","金融/银行信息":"增强","社保号/税号":"增强","定位/行踪轨迹":"增强","面试视频录像":"增强","情绪识别数据":"增强","AI评估评分":"一般"} },
+  { code:"US", name:"美国", group:"北美", mode:"custom", overrides:{"姓名":"一般","国籍":"一般","手机号":"一般","邮箱":"一般","住址/地址":"一般","工作履历":"一般","学历/教育背景":"一般","职业技能/证书":"一般","照片/头像":"一般","身份证号/护照号":"敏感","社保号/税号":"敏感","出生日期/年龄":"增强","婚姻状况":"增强","薪酬/薪资信息":"增强","种族/民族":"敏感","宗教信仰":"敏感","政治观点":"增强","工会会员":"敏感","性取向":"敏感","健康/医疗状况":"敏感","残疾状况":"敏感","基因数据":"敏感","生物识别(指纹/面部)":"敏感","犯罪记录":"增强","金融/银行信息":"敏感","定位/行踪轨迹":"敏感","面试视频录像":"增强","情绪识别数据":"增强","AI评估评分":"增强"} },
+  { code:"MX", name:"墨西哥", group:"北美", mode:"proxy_eu" },
+  { code:"BR", name:"巴西", group:"拉美", mode:"proxy_eu" },
+  { code:"PE", name:"秘鲁", group:"拉美", mode:"proxy_eu", overrides:{"薪酬/薪资信息":"敏感"} },
+  { code:"SA", name:"沙特", group:"中东", mode:"explicit" },
+  { code:"AE", name:"阿联酋", group:"中东", mode:"explicit" },
+  { code:"ZA", name:"南非", group:"非洲", mode:"proxy_eu", overrides:{"犯罪记录":"敏感"} },
+];
+const MARKET_BY_CODE = Object.fromEntries(MARKET_META.map(m => [m.code, m]));
+
+const LEVEL = { "一般":"pass", "增强":"warn", "敏感":"restrict", "禁止":"forbid" };
+const LEVEL_LABEL = { pass:"可收集", warn:"需谨慎", restrict:"受限敏感", forbid:"已禁止", nolaw:"暂无专项立法" };
+
+const MARKET_LEGAL = {
+  CN:"《个人信息保护法》(PIPL) 第28条", SG:"PDPA 2012（2024修正案）", JP:"APPI 个人信息保护法",
+  KR:"PIPA 개인정보보호법（2023修订）", VN:"PDP Law 2025 + Decree 356", ID:"PDP法（2022年第27号法）",
+  TH:"PDPA 2022", MY:"PDPA 2010（2024修正案）", PH:"DPA 2012",
+  EU:"GDPR Art.9（特殊类别个人数据）", UK:"UK GDPR + DPA 2018", SA:"PDPL 2023修订版", AE:"联邦PDPL (Decree-Law 45/2021)",
+  HK:"《个人资料（私隐）条例》(PDPO) Cap.486（无法定敏感数据类别，依赖私隐专员实务守则/指引）", MO:"《个人资料保护法》第8/2005号法律第7条（特殊类别个人数据）",
+  AU:"Privacy Act 1988(Cth)第6条（敏感信息定义，含犯罪记录）", MM:"无专门数据保护立法（电子交易法部分条款适用）", LA:"无专门数据保护立法",
+  DE:"BDSG + GDPR", FR:"Loi Informatique et Libertés + GDPR", NL:"UAVG + GDPR", SE:"Dataskyddslagen + GDPR",
+  RO:"Law No.190/2018 + GDPR", HU:"Infotv. + GDPR", AT:"Datenschutzgesetz(DSG) + GDPR", CH:"revFADP第5(c)条（特别敏感个人数据，2023年9月生效）",
+  US:"以加州CCPA/CPRA（《民法典》第1798.140(ae)条）为代表标准——加州是美国隐私立法的风向标，且2023年起员工/求职者数据已不再豁免于CCPA，比多数排除招聘场景的州法更适合作为参照；犯罪记录、薪酬等未被CCPA列为敏感类别的字段，依据另有的专项联邦/州法（EEOC指引、各州工资历史禁问法）单独判断",
+  MX:"《个人数据保护法》新版(2025年3月20日公布/21日生效)第2条第VI款（敏感个人信息定义，条文概念与旧法基本一致，具体列举清单沿用原框架）", BR:"《通用数据保护法》(LGPD) 第5条第II款", PE:"《个人数据保护法》(Ley 29733) 第2条第5款 + 2025年3月新规(DS 016-2024-JUS)扩大至情绪与基因数据",
+  ZA:"《个人信息保护法》(POPIA) 第26条", RU:"《个人数据法》(152-FZ) 第10-11条",
+};
+
+const MARKET_SPECIAL_NOTE = {
+  RU: "242-FZ另要求候选人数据\"首次存储\"必须在俄罗斯境内完成，仅依靠单独同意不足以满足合规，需额外评估数据本地化方案，2026年执法趋严（含对外国企业的处罚先例）。",
+};
+
+const ACTION_TEMPLATE = {
+  pass: (f,m) => `在${m}可正常收集"${f}"，建议在隐私政策中说明收集目的。`,
+  warn: (f,m) => `在${m}，"${f}"建议仅在必要环节收集（如仅入职阶段而非初筛阶段），不用于自动化筛选/淘汰决策，并在隐私政策中单独说明。`,
+  restrict: (f,m) => `在${m}，"${f}"需要：候选人单独明确同意（不能与其他条款一并勾选）、完成DPIA评估、采取加密存储等增强安全措施。`,
+  forbid: (f,m) => `在${m}，"${f}"已被明确禁止用于招聘场景，无合规绕行路径，需从表单/流程中直接删除该字段收集，产品层面做区域化屏蔽。`,
+};
+
+const FIELD_DATA = [
+  { cat:"基础身份信息", name:"姓名", kw:["姓名","名字","中文姓名","英文姓名","full name","name","first name","last name","legal name","候选人姓名","申请人姓名"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"基础身份信息", name:"性别", kw:["性别","男/女","gender","sex","男 女"], v:{CN:"增强",SG:"增强",JP:"增强",KR:"增强",VN:"增强",ID:"增强",TH:"增强",MY:"增强",PH:"敏感",EU:"增强",UK:"增强",SA:"增强",AE:"增强"} },
+  { cat:"基础身份信息", name:"出生日期/年龄", kw:["出生日期","生日","年龄","出生年月","出生年月日","date of birth","dob","birthday","birth date","age","周岁"], v:{CN:"增强",SG:"增强",JP:"增强",KR:"增强",VN:"增强",ID:"增强",TH:"增强",MY:"增强",PH:"敏感",EU:"增强",UK:"增强",SA:"增强",AE:"增强"} },
+  { cat:"基础身份信息", name:"国籍", kw:["国籍","nationality","citizenship","国籍/地区"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"基础身份信息", name:"身份证号/护照号", kw:["身份证","身份证号","护照","护照号","证件号","证件类型","id number","id card","passport","passport number","identification number","national id"], v:{CN:"敏感",SG:"增强",JP:"增强",KR:"敏感",VN:"增强",ID:"增强",TH:"增强",MY:"增强",PH:"敏感",EU:"增强",UK:"增强",SA:"敏感",AE:"敏感"} },
+  { cat:"基础身份信息", name:"婚姻状况", kw:["婚姻状况","是否已婚","婚否","感情状态","marital status","marriage status","single married","已婚/未婚"], v:{CN:"增强",SG:"增强",JP:"增强",KR:"增强",VN:"增强",ID:"增强",TH:"增强",MY:"增强",PH:"敏感",EU:"增强",UK:"增强",SA:"增强",AE:"增强"} },
+
+  { cat:"联系方式", name:"手机号", kw:["手机","手机号","手机号码","联系电话","电话号码","phone","phone number","mobile","mobile number","cell","contact number"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"联系方式", name:"邮箱", kw:["邮箱","邮箱地址","电子邮箱","邮件地址","email","e-mail","email address"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"联系方式", name:"住址/地址", kw:["住址","地址","居住地址","现居地","家庭住址","通讯地址","户籍地址","address","home address","residential address","current address"], v:{CN:"增强",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"增强",AE:"增强"} },
+
+  { cat:"职场信息", name:"工作履历", kw:["工作经历","工作履历","任职经历","从业经历","工作背景","职业经历","work experience","employment history","job history","work history"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"敏感",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"职场信息", name:"学历/教育背景", kw:["学历","教育背景","毕业院校","学位","最高学历","毕业学校","education","education background","degree","academic background","qualification"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"敏感",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"职场信息", name:"薪酬/薪资信息", kw:["薪资","薪酬","期望薪资","工资","当前薪资","薪资要求","薪资水平","月薪","年薪","salary","compensation","expected salary","current salary","pay","remuneration"], v:{CN:"敏感",SG:"增强",JP:"一般",KR:"一般",VN:"敏感",ID:"敏感",TH:"一般",MY:"增强",PH:"敏感",EU:"一般",UK:"一般",SA:"敏感",AE:"敏感"} },
+  { cat:"职场信息", name:"职业技能/证书", kw:["技能","专业技能","资格证","证书","资质证书","职业资格","skills","certificate","certification","qualification","professional license"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"增强",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"职场信息", name:"照片/头像", kw:["照片","头像","近照","个人照片","一寸照","证件照","photo","photograph","headshot","profile picture","picture"], v:{CN:"增强",SG:"一般",JP:"一般",KR:"一般",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"增强",UK:"增强",SA:"一般",AE:"一般"} },
+
+  { cat:"敏感属性", name:"种族/民族", kw:["民族","种族","族裔","ethnicity","race","ethnic origin","racial background"], v:{CN:"敏感",SG:"一般",JP:"敏感",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"一般",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"敏感属性", name:"宗教信仰", kw:["宗教","信仰","宗教信仰","religion","religious belief","faith"], v:{CN:"敏感",SG:"一般",JP:"敏感",KR:"敏感",VN:"敏感",ID:"一般",TH:"敏感",MY:"敏感",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"敏感属性", name:"政治观点", kw:["政治面貌","政治观点","政治立场","political affiliation","political opinion","political views"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"敏感",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"敏感属性", name:"工会会员", kw:["工会","工会会员","是否加入工会","union","union membership","trade union"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"敏感",VN:"一般",ID:"敏感",TH:"敏感",MY:"一般",PH:"敏感",EU:"敏感",UK:"敏感",SA:"一般",AE:"敏感"} },
+  { cat:"敏感属性", name:"性取向", kw:["性取向","性倾向","sexual orientation"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"敏感",VN:"一般",ID:"一般",TH:"敏感",MY:"一般",PH:"一般",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+
+  { cat:"健康与生物识别", name:"健康/医疗状况", kw:["健康状况","体检","体检报告","病史","健康证明","既往病史","医疗记录","health condition","medical","medical history","health check","health record"], v:{CN:"敏感",SG:"增强",JP:"敏感",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"敏感",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"健康与生物识别", name:"残疾状况", kw:["残疾","残疾状况","残障","是否残疾","disability","disability status","impairment"], v:{CN:"敏感",SG:"增强",JP:"敏感",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"敏感",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"健康与生物识别", name:"基因数据", kw:["基因","基因数据","基因检测","遗传信息","genetic","genetic data","genetic testing","dna"], v:{CN:"敏感",SG:"一般",JP:"一般",KR:"敏感",VN:"一般",ID:"敏感",TH:"敏感",MY:"一般",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+  { cat:"健康与生物识别", name:"生物识别(指纹/面部)", kw:["指纹","人脸识别","生物识别","面部识别","虹膜","fingerprint","facial recognition","biometric","biometrics","face id","iris scan"], v:{CN:"敏感",SG:"一般",JP:"增强",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"敏感",PH:"敏感",EU:"敏感",UK:"敏感",SA:"敏感",AE:"敏感"} },
+
+  { cat:"安全与法律相关", name:"犯罪记录", kw:["犯罪记录","前科","背景调查","无犯罪记录证明","案底","刑事记录","criminal record","background check","criminal history","police clearance"], v:{CN:"敏感",SG:"一般",JP:"敏感",KR:"敏感",VN:"敏感",ID:"敏感",TH:"敏感",MY:"敏感",PH:"敏感",EU:"增强",UK:"增强",SA:"敏感",AE:"敏感"}, note:{EU:"欧盟GDPR不将犯罪记录归入Art.9法定敏感类，但Art.10要求官方授权或必要性论证，实操中仍需谨慎处理。",UK:"同EU，需官方授权或必要性论证。"} },
+  { cat:"安全与法律相关", name:"金融/银行信息", kw:["银行账号","银行卡","银行卡号","开户行","金融信息","bank account","bank details","account number","financial information"], v:{CN:"敏感",SG:"增强",JP:"一般",KR:"一般",VN:"敏感",ID:"敏感",TH:"一般",MY:"增强",PH:"敏感",EU:"一般",UK:"一般",SA:"敏感",AE:"敏感"} },
+  { cat:"安全与法律相关", name:"社保号/税号", kw:["社保号","社会保险号","社保卡号","税号","纳税人识别号","公积金账号","tax id","social security number","ssn","tax identification"], v:{CN:"增强",SG:"一般",JP:"增强",KR:"增强",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"敏感",EU:"一般",UK:"一般",SA:"一般",AE:"一般"} },
+  { cat:"安全与法律相关", name:"定位/行踪轨迹", kw:["定位","行踪","位置信息","地理位置","实时定位","gps","location tracking","geolocation","real-time location"], v:{CN:"敏感",SG:"一般",JP:"一般",KR:"一般",VN:"敏感",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"一般",UK:"一般",SA:"敏感",AE:"敏感"} },
+
+  { cat:"AI衍生数据", name:"面试视频录像", kw:["面试录像","视频面试","面试录音","interview recording","video interview","recorded interview"], v:{CN:"增强",SG:"一般",JP:"一般",KR:"增强",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"增强",UK:"增强",SA:"增强",AE:"增强"} },
+  { cat:"AI衍生数据", name:"情绪识别数据", kw:["情绪识别","表情分析","情感分析","emotion recognition","emotion analysis","facial expression analysis"], v:{CN:"增强",SG:"一般",JP:"一般",KR:"增强",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"禁止",UK:"禁止",SA:"增强",AE:"增强"}, note:{EU:"EU AI法案Art.5自2025年2月起明确禁止工作场所情绪识别AI，无过渡期，违规最高可罚全球营业额7%。",UK:"参照EU AI法案标准，同样不建议在英国招聘场景使用。"} },
+  { cat:"AI衍生数据", name:"AI评估评分", kw:["AI评分","智能评估","AI打分","算法评估","ai screening","ai assessment","automated scoring","algorithmic assessment"], v:{CN:"一般",SG:"一般",JP:"一般",KR:"增强",VN:"一般",ID:"一般",TH:"一般",MY:"一般",PH:"一般",EU:"增强",UK:"增强",SA:"一般",AE:"一般"} },
+];
+
+function getLevel(field, marketCode){
+  const meta = MARKET_BY_CODE[marketCode];
+  if (meta.mode === "no_law") return "nolaw";
+  if (meta.overrides && meta.overrides[field.name]) return LEVEL[meta.overrides[field.name]];
+  if (meta.mode === "explicit") return LEVEL[field.v[marketCode]];
+  if (meta.mode === "proxy_eu") return LEVEL[field.v["EU"]];
+  return "pass";
+}
+
+const selectedMarkets = new Set();
+let mode = "text";
+let uploadedFiles = []; // [{name, text}]
+
+function renderMarketChips(){
+  const box = document.getElementById("marketGroups");
+  box.innerHTML = REGION_ORDER.map(region => {
+    const items = MARKET_META.filter(m => m.group === region);
+    return `
+      <div class="group">
+        <div class="region-title">${rName(region)}</div>
+        <div class="chips">
+          ${items.map(m => `<span class="chip ${m.mode === 'no_law' ? 'nolaw' : ''} ${selectedMarkets.has(m.code) ? 'active' : ''}" data-market="${m.code}">${mName(m)}</span>`).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+  box.querySelectorAll(".chip").forEach(el => {
+    el.onclick = () => {
+      const code = el.dataset.market;
+      if (selectedMarkets.has(code)) { selectedMarkets.delete(code); el.classList.remove("active"); }
+      else { selectedMarkets.add(code); el.classList.add("active"); }
+      updateGenBtn();
+    };
+  });
+}
+
+function setMode(m){
+  mode = m;
+  document.getElementById("modeText").classList.toggle("active", m === "text");
+  document.getElementById("modeFile").classList.toggle("active", m === "file");
+  document.getElementById("pasteBox").style.display = m === "text" ? "block" : "none";
+  document.getElementById("fileBox").style.display = m === "file" ? "flex" : "none";
+  updateGenBtn();
+}
+
+async function extractOneFile(file){
+  const buf = await file.arrayBuffer();
+  if (file.name.toLowerCase().endsWith(".docx")) {
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    return result.value;
+  } else if (file.name.toLowerCase().endsWith(".pdf")) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(" ") + "\n";
+    }
+    return text;
+  }
+  throw new Error(t("unsupportedFile"));
+}
+
+async function handleFiles(evt){
+  const files = Array.from(evt.target.files || []);
+  if (!files.length) return;
+  setFileStatus("parsing", { n: files.length });
+  document.getElementById("fileStatus").classList.remove("warn");
+
+  for (const file of files) {
+    try {
+      const text = await extractOneFile(file);
+      uploadedFiles.push({ name: file.name, text });
+    } catch (err) {
+      uploadedFiles.push({ name: file.name, text: "", error: err.message });
+    }
+  }
+
+  setFileStatus("uploadedSummary", { n: uploadedFiles.length, chars: uploadedFiles.reduce((s, f) => s + f.text.length, 0) });
+  renderFileList();
+  evt.target.value = ""; // 允许重复选择同一文件继续追加
+  updateGenBtn();
+}
+
+function removeFile(idx){
+  uploadedFiles.splice(idx, 1);
+  renderFileList();
+  updateGenBtn();
+}
+
+function renderFileList(){
+  const box = document.getElementById("fileList");
+  box.innerHTML = uploadedFiles.map((f, idx) => {
+    const short = f.error
+      ? `<span class="fmeta warn">${t("parseFailed", { err: escapeHtml(f.error) })}</span>`
+      : f.text.trim().length < 20
+        ? `<span class="fmeta warn">${t("fewChars", { n: f.text.length })}</span>`
+        : `<span class="fmeta">${t("extracted", { n: f.text.length })}</span>`;
+    return `
+      <div class="file-item">
+        <span><span class="fname">${escapeHtml(f.name)}</span>${short}</span>
+        <button onclick="removeFile(${idx})">${t("remove")}</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateGenBtn(){
+  const hasMarket = selectedMarkets.size > 0;
+  const hasText = mode === "text"
+    ? document.getElementById("pasteBox").value.trim().length > 0
+    : uploadedFiles.some(f => f.text && f.text.trim().length > 0);
+  document.getElementById("genBtn").disabled = !(hasMarket && hasText);
+}
+document.getElementById("pasteBox").addEventListener("input", updateGenBtn);
+
+let manualFieldsByDoc = {}; // { docIndex: [fieldName, ...] } —— 从字段库里选的
+let customFieldsByDoc = {}; // { docIndex: [customName, ...] } —— 完全自由填写的
+
+function getDocItems(docIndex, text, markets){
+  const autoMatched = FIELD_DATA.filter(f => f.kw.some(k => text.toLowerCase().includes(k.toLowerCase())));
+  const autoNames = new Set(autoMatched.map(f => f.name));
+  const manualNames = manualFieldsByDoc[docIndex] || [];
+  const manualFields = FIELD_DATA.filter(f => manualNames.includes(f.name) && !autoNames.has(f.name));
+  const items = autoMatched.map(f => ({ field: f, manual: false }))
+    .concat(manualFields.map(f => ({ field: f, manual: true })));
+  let riskCount = 0;
+  items.forEach(it => markets.forEach(m => { if (getLevel(it.field, m.code) !== "pass") riskCount++; }));
+  const customNames = customFieldsByDoc[docIndex] || [];
+  return { items, riskCount, customNames };
+}
+
+function renderFieldCardHtml(item, text, markets, docIndex){
+  const f = item.field;
+  const tagHtml = item.manual
+    ? `<span class="confidence-tag manual-tag">${t("manualTag")} <button class="remove-manual" onclick="removeManualField(${docIndex}, '${f.name}')">${t("remove")}</button></span>`
+    : `<span class="confidence-tag">${t("matchedKw", { kw: escapeHtml(f.kw.find(k => text.toLowerCase().includes(k.toLowerCase()))) })}</span>`;
+  const badges = markets.map(m => {
+    const lvl = getLevel(f, m.code);
+    return `<span class="badge b-${lvl}">${mName(m)} · ${levelLabel(lvl)}</span>`;
+  }).join("");
+  const actions = markets
+    .filter(m => getLevel(f, m.code) !== "pass")
+    .map(m => {
+      const lvl = getLevel(f, m.code);
+      if (lvl === "nolaw") {
+        return `<div class="action-line">${t("nolawAction", { m: mName(m), f: fName(f.name) })}<div class="citation">${t("legalBasis")}${legalOf(m.code)}</div></div>`;
+      }
+      const note = fieldNoteOf(f, m.code);
+      const extra = note ? ` ${note}` : "";
+      return `<div class="action-line">${t(ACTION_KEY[lvl], { m: mName(m), f: fName(f.name) })}${extra}<div class="citation">${t("legalBasis")}${legalOf(m.code)}</div></div>`;
+    }).join("");
+  return `
+    <div class="field-card">
+      <div class="field-head"><span class="field-name">${fName(f.name)}</span>${tagHtml}</div>
+      <div class="market-badges">${badges}</div>
+      ${actions}
+    </div>
+  `;
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function renderCustomFieldCardHtml(name, docIndex, itemIndex){
+  const safe = escapeHtml(name);
+  return `
+    <div class="field-card">
+      <div class="field-head">
+        <span class="field-name">${safe}</span>
+        <span class="confidence-tag manual-tag">${t("customTag")} <button class="remove-manual" onclick="removeCustomField(${docIndex}, ${itemIndex})">${t("remove")}</button></span>
+      </div>
+      <div class="action-line">${t("customNote")}</div>
+    </div>
+  `;
+}
+
+function manualAddControlHtml(docIndex, items){
+  const usedNames = new Set(items.map(it => it.field.name));
+  const remaining = FIELD_DATA.filter(f => !usedNames.has(f.name));
+  const selectHtml = remaining.length
+    ? (() => {
+        const cats = [...new Set(remaining.map(f => f.cat))];
+        const optionsHtml = cats.map(cat => `
+          <optgroup label="${cName(cat)}">
+            ${remaining.filter(f => f.cat === cat).map(f => `<option value="${f.name}">${fName(f.name)}</option>`).join("")}
+          </optgroup>
+        `).join("");
+        return `
+          <div class="manual-add-row">
+            <select id="manualSelect-${docIndex}">${optionsHtml}</select>
+            <button onclick="addManualField(${docIndex})">${t("addFromLib")}</button>
+          </div>`;
+      })()
+    : `<div class="manual-add-note">${t("allCovered", { n: FIELD_DATA.length })}</div>`;
+  return `
+    <div class="manual-add">
+      <div class="manual-add-label">${t("missingQ")}</div>
+      ${selectHtml}
+      <div class="manual-add-row">
+        <input type="text" id="customInput-${docIndex}" placeholder="${t("customPlaceholder")}">
+        <button onclick="addCustomField(${docIndex})">${t("addCustom")}</button>
+      </div>
+    </div>
+  `;
+}
+
+function addManualField(docIndex){
+  const sel = document.getElementById(`manualSelect-${docIndex}`);
+  if (!sel || !sel.value) return;
+  if (!manualFieldsByDoc[docIndex]) manualFieldsByDoc[docIndex] = [];
+  if (!manualFieldsByDoc[docIndex].includes(sel.value)) manualFieldsByDoc[docIndex].push(sel.value);
+  generateReport(false);
+}
+
+function removeManualField(docIndex, fieldName){
+  manualFieldsByDoc[docIndex] = (manualFieldsByDoc[docIndex] || []).filter(n => n !== fieldName);
+  generateReport(false);
+}
+
+function addCustomField(docIndex){
+  const input = document.getElementById(`customInput-${docIndex}`);
+  if (!input || !input.value.trim()) return;
+  if (!customFieldsByDoc[docIndex]) customFieldsByDoc[docIndex] = [];
+  customFieldsByDoc[docIndex].push(input.value.trim());
+  generateReport(false);
+}
+
+function removeCustomField(docIndex, itemIndex){
+  (customFieldsByDoc[docIndex] || []).splice(itemIndex, 1);
+  generateReport(false);
+}
+
+function watermarkSvg(){
+  const w = CJK_LANGS.has(currentLang) ? 220 : 340;
+  return `
+  <svg class="watermark" aria-hidden="true">
+    <defs>
+      <pattern id="wm" width="${w}" height="140" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+        <text x="0" y="70" font-size="20" fill="currentColor" opacity="0.16">${escapeHtml(t("watermark"))}</text>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#wm)"/>
+  </svg>`;
+}
+
+function generateReport(scrollToTop){
+  if (scrollToTop === undefined) scrollToTop = true;
+  const markets = MARKET_META.filter(m => selectedMarkets.has(m.code));
+  const docs = mode === "text"
+    ? [{ name: t("pastedText"), text: document.getElementById("pasteBox").value }]
+    : uploadedFiles.filter(f => !f.error);
+
+  const totalChars = docs.reduce((s, d) => s + d.text.length, 0);
+  const allResults = docs.map((d, idx) => ({ doc: d, idx, ...getDocItems(idx, d.text, markets) }));
+  const totalMatched = allResults.reduce((s, r) => s + r.items.length, 0);
+  const totalManual = allResults.reduce((s, r) => s + r.items.filter(it => it.manual).length, 0);
+  const totalCustom = allResults.reduce((s, r) => s + r.customNames.length, 0);
+  const totalRisk = allResults.reduce((s, r) => s + r.riskCount, 0);
+
+  document.getElementById("sourceBody").innerHTML = docs.map(d =>
+    `<div style="margin-bottom:10px;"><b>${escapeHtml(d.name)}</b>${t("docChars", { n: d.text.length })}<br>${escapeHtml(d.text.slice(0,300) || t("empty")) + (d.text.length>300?"…":"")}</div>`
+  ).join("");
+  document.getElementById("sourcePanel").querySelector("summary").textContent =
+    docs.length > 1
+      ? t("srcMulti", { docs: docs.length, chars: totalChars, matched: totalMatched, manual: totalManual, custom: totalCustom, risk: totalRisk })
+      : t("srcSingle", { src: mode === "text" ? t("pastedText") : t("uploadedParse"), chars: totalChars, matched: totalMatched,
+          extra: totalManual || totalCustom ? t("srcSingleExtra", { manual: totalManual, custom: totalCustom }) : "" });
+
+  const box = document.getElementById("fieldCards");
+
+  function renderDocBody(r, text){
+    const manualItems = r.items.filter(it => it.manual);
+    const autoItems = r.items.filter(it => !it.manual);
+    const customHtml = r.customNames.map((name, i) => renderCustomFieldCardHtml(name, r.idx, i)).join("");
+    const manualHtml = manualItems.map(it => renderFieldCardHtml(it, text, markets, r.idx)).join("");
+    const autoHtml = autoItems.map(it => renderFieldCardHtml(it, text, markets, r.idx)).join("");
+    const hasManualExtras = customHtml || manualHtml;
+    const manualSectionLabel = hasManualExtras
+      ? `<div class="manual-section-label">${t("manualSection")}</div>`
+      : "";
+    const autoSectionLabel = hasManualExtras && autoHtml
+      ? `<div class="manual-section-label">${t("autoSection")}</div>`
+      : "";
+    const emptyHtml = (!r.items.length && !r.customNames.length)
+      ? `<div class="empty-note">${t("emptyDoc")}</div>`
+      : "";
+    return manualAddControlHtml(r.idx, r.items) + emptyHtml
+      + manualSectionLabel + customHtml + manualHtml
+      + autoSectionLabel + autoHtml;
+  }
+
+  if (!docs.length || totalChars === 0) {
+    box.innerHTML = watermarkSvg() + `<div class="empty-note">${t("noMaterial")}</div>`;
+  } else if (docs.length === 1) {
+    const r = allResults[0];
+    box.innerHTML = watermarkSvg() + renderDocBody(r, docs[0].text);
+  } else {
+    const summaryHtml = `
+      <div class="field-card" style="border-color:var(--accent, var(--border));">
+        <div class="field-head"><span class="field-name">${t("batchTitle")}</span></div>
+        <div class="action-line">${t("batchBody", { docs: docs.length, matched: totalMatched, manual: totalManual, custom: totalCustom, risk: totalRisk })}</div>
+      </div>`;
+    const perDocHtml = allResults.map(r => `
+      <div class="group" style="margin:20px 0 10px;">
+        <div class="region-title" style="font-size:13px;">📄 ${r.riskCount
+          ? t("perDocRisk", { name: escapeHtml(r.doc.name), n: r.items.length + r.customNames.length, risk: r.riskCount })
+          : t("perDocOk", { name: escapeHtml(r.doc.name), n: r.items.length + r.customNames.length })}</div>
+      </div>
+      ${renderDocBody(r, r.doc.text)}
+    `).join("");
+    box.innerHTML = watermarkSvg() + summaryHtml + perDocHtml;
+  }
+
+  document.getElementById("report").style.display = "block";
+  if (scrollToTop) document.getElementById("report").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+let lastDPIAData = null;
+
+function computeDPIAData(){
+  const markets = MARKET_META.filter(m => selectedMarkets.has(m.code));
+  const docs = mode === "text"
+    ? [{ name: t("pastedText"), text: document.getElementById("pasteBox").value }]
+    : uploadedFiles.filter(f => !f.error);
+
+  const restrictMap = {}; // fieldName -> Set(marketCode)
+  docs.forEach((d, idx) => {
+    const { items } = getDocItems(idx, d.text, markets);
+    items.forEach(it => {
+      markets.forEach(m => {
+        if (getLevel(it.field, m.code) === "restrict") {
+          if (!restrictMap[it.field.name]) restrictMap[it.field.name] = new Set();
+          restrictMap[it.field.name].add(m.code);
+        }
+      });
+    });
+  });
+
+  const fieldNames = Object.keys(restrictMap);
+  const involvedCodes = new Set(fieldNames.flatMap(n => [...restrictMap[n]]));
+
+  const exceptions = [];
+  Object.keys(MARKET_SPECIAL_NOTE).forEach(code => {
+    if (involvedCodes.has(code)) exceptions.push({ label: mName(MARKET_BY_CODE[code]), text: specialNoteOf(code) });
+  });
+  FIELD_DATA.forEach(f => {
+    if (!restrictMap[f.name] || !f.note) return;
+    [...restrictMap[f.name]].forEach(code => {
+      if (f.note[code]) exceptions.push({ label: `${fName(f.name)} · ${mName(MARKET_BY_CODE[code])}`, text: fieldNoteOf(f, code) });
+    });
+  });
+
+  const LEGAL_LIST_THRESHOLD = 8; // 触发市场数超过这个值，就不逐条罗列法条，改为引用第2节
+
+  const tableRows = fieldNames.map(name => {
+    const codes = [...restrictMap[name]];
+    const uniqueLegals = [...new Set(codes.map(c => legalOf(c)))];
+    const tooMany = codes.length > LEGAL_LIST_THRESHOLD;
+    return {
+      name: fName(name),
+      marketsText: codes.map(c => mName(MARKET_BY_CODE[c])).join(t("listSep")),
+      legalText: tooMany
+        ? t("legalTooMany", { n: codes.length })
+        : uniqueLegals.join(t("legalSep")),
+    };
+  });
+
+  return { markets, fieldNames, tableRows, exceptions };
+}
+
+function generateDPIA(){
+  const data = computeDPIAData();
+  lastDPIAData = data;
+  renderDPIA(data);
+  document.getElementById("dpiaSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (data.fieldNames.length) exportDPIAWord(data);
+}
+
+// 只负责在网页上渲染DPIA（切换语言时调用，不会重复触发Word下载）
+function renderDPIA(data){
+  const box = document.getElementById("dpiaSection");
+  box.style.display = "block";
+  if (!data.fieldNames.length) {
+    box.innerHTML = `<div class="empty-note">${t("dpiaNone")}</div>`;
+    return;
+  }
+  const marketRows = data.markets.map(m => `<li>${mName(m)}${t("dash")}${legalOf(m.code)}</li>`).join("");
+  const tableRows = data.tableRows.map(r => `<tr><td class="fname">${r.name}</td><td>${r.marketsText}</td><td>${r.legalText}</td></tr>`).join("");
+  const exceptionHtml = data.exceptions.length
+    ? data.exceptions.map(e => `<div class="dpia-warn"><b>${e.label}</b>${t("colon")}${e.text}</div>`).join("")
+    : `<div class="dpia-desc">${t("dpiaNoExceptions")}</div>`;
+
+  box.innerHTML = watermarkSvg() + `
+    <div class="dpia-box">
+      <div class="dpia-intro"><b>${t("dpiaIntroLabel")}</b>${t("dpiaIntro")}</div>
+      <h4>${t("dpiaH0")}</h4>
+      <div class="dpia-tofill">${t("dpiaFill0")}</div>
+      <h4>${t("dpiaH1")}</h4>
+      <div class="dpia-tofill">${t("dpiaFill1")}</div>
+      <h4>${t("dpiaH2")}</h4>
+      <div class="dpia-desc">${t("dpiaDesc2")}</div>
+      <ul class="dpia-list">${marketRows}</ul>
+      <h4>${t("dpiaH3")}</h4>
+      <div class="dpia-desc">${t("dpiaDesc3")}</div>
+      <table class="dpia-table">
+        <tr><th>${t("thField")}</th><th>${t("thMarkets")}</th><th>${t("thLegal")}</th></tr>
+        ${tableRows}
+      </table>
+      <h4>${t("dpiaH4")}</h4>
+      <ul class="dpia-list">
+        <li>${t("dpiaReq1")}</li>
+        <li>${t("dpiaReq2")}</li>
+        <li>${t("dpiaReq3")}</li>
+      </ul>
+      <h4>${t("dpiaH5")}</h4>
+      ${exceptionHtml}
+      <h4>${t("dpiaH6")}</h4>
+      <div class="dpia-tofill">${t("dpiaFill6")}</div>
+      <h4>${t("dpiaH7")}</h4>
+      <div class="dpia-tofill">${t("dpiaFill7")}</div>
+    </div>
+  `;
+}
+
+function exportDPIAWord(data){
+  const rtl = RTL_LANGS.has(currentLang);
+  const align = rtl ? "right" : "left";
+  const marketLis = data.markets.map(m => `<li>${mName(m)}${t("dash")}${legalOf(m.code)}</li>`).join("");
+  const tableRows = data.tableRows.map(r =>
+    `<tr><td style="padding:6px 8px;border-bottom:1px solid #ccc;font-weight:bold;">${r.name}</td><td style="padding:6px 8px;border-bottom:1px solid #ccc;">${r.marketsText}</td><td style="padding:6px 8px;border-bottom:1px solid #ccc;color:#666;">${r.legalText}</td></tr>`
+  ).join("");
+  const exceptionHtml = data.exceptions.length
+    ? data.exceptions.map(e => `<p style="background:#FAEEDA;color:#854F0B;padding:8px 10px;font-size:10.5pt;"><b>${e.label}</b>${t("colon")}${e.text}</p>`).join("")
+    : `<p style="font-size:10.5pt;color:#5B5F66;">${t("dpiaNoExceptions")}</p>`;
+  const tofill = (s) => `<p style="border:1px dashed #999;background:#F7F7F2;padding:8px 10px;font-style:italic;color:#888880;font-size:10.5pt;">${s}</p>`;
+
+  const html = `<html lang="${currentLang}" dir="${rtl ? "rtl" : "ltr"}" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>${t("docTitle")}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  body{ font-family:'Microsoft YaHei','Segoe UI',Arial,sans-serif; font-size:11pt; color:#333333; direction:${rtl ? "rtl" : "ltr"}; }
+  h1{ color:#1B2A41; font-size:20pt; margin-bottom:2pt; }
+  h2{ color:#9B2A1E; font-size:12pt; font-weight:normal; margin-top:0; }
+  h3{ color:#1B2A41; font-size:13pt; margin-top:16pt; margin-bottom:6pt; }
+  table{ border-collapse:collapse; width:100%; margin-bottom:10pt; }
+  th{ background:#1B2A41; color:#ffffff; padding:6px 8px; text-align:${align}; font-size:10pt; }
+  td, p, li{ text-align:${align}; }
+  ul{ font-size:10.5pt; line-height:1.7; }
+</style>
+</head>
+<body>
+  <h1>${t("docTitle")}</h1>
+  <h2>${t("docSubtitle")}</h2>
+  <p style="font-size:9.5pt;color:#5B5F66;">${t("docNote")}</p>
+  <p style="font-size:9.5pt;color:#5B5F66;border-bottom:1px solid #ccc;padding-bottom:10pt;"><b>${t("dpiaIntroLabel")}</b>${t("dpiaIntro")}</p>
+
+  <h3>${t("dpiaH0")}</h3>
+  ${tofill(t("dpiaFill0"))}
+
+  <h3>${t("dpiaH1")}</h3>
+  ${tofill(t("dpiaFill1"))}
+
+  <h3>${t("dpiaH2")}</h3>
+  <p style="font-size:10.5pt;">${t("dpiaDesc2")}</p>
+  <ul>${marketLis}</ul>
+
+  <h3>${t("dpiaH3")}</h3>
+  <p style="font-size:10.5pt;">${t("dpiaDesc3Word")}</p>
+  <table>
+    <tr><th>${t("thField")}</th><th>${t("thMarkets")}</th><th>${t("thLegal")}</th></tr>
+    ${tableRows}
+  </table>
+
+  <h3>${t("dpiaH4")}</h3>
+  <ul>
+    <li>${t("dpiaReq1")}</li>
+    <li>${t("dpiaReq2")}</li>
+    <li>${t("dpiaReq3")}</li>
+  </ul>
+
+  <h3>${t("dpiaH5")}</h3>
+  ${exceptionHtml}
+
+  <h3>${t("dpiaH6")}</h3>
+  ${tofill(t("dpiaFill6"))}
+
+  <h3>${t("dpiaH7")}</h3>
+  ${tofill(t("dpiaFill7"))}
+
+  <p style="font-size:9pt;color:#888880;border-top:1px solid #ccc;padding-top:10pt;margin-top:20pt;">${t("docFooter")}</p>
+</body>
+</html>`;
+
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `${t("fileDpia", { date: ts })}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF(){
+  const ts = new Date().toISOString().slice(0,10);
+  const prevTitle = document.title;
+  document.title = t("fileReport", { date: ts });
+
+  // 打印前强制展开可折叠区块（浏览器对<details>的折叠内容有内部隐藏机制，仅靠CSS不可靠，需直接改open属性）
+  const collapsibles = document.querySelectorAll('.credibility, .source-panel');
+  const prevOpenStates = Array.from(collapsibles).map(el => el.open);
+  collapsibles.forEach(el => { el.open = true; });
+
+  window.print();
+
+  document.title = prevTitle;
+  collapsibles.forEach((el, i) => { el.open = prevOpenStates[i]; });
+}
+
+captureSourceStrings();
+currentLang = detectLang();
+renderLangSelect();
+setLang(currentLang, false);
+</script>
+</body>
+</html>
