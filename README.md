@@ -67,6 +67,7 @@ Rollback: `git revert HEAD && git push`
 | v3.8 | First production deployment; content consistency fixes |
 | v4.0 | i18n framework; full Simplified Chinese & English |
 | v4.1 | Traditional Chinese (HK), Vietnamese, Indonesian, Japanese, Arabic (RTL) |
+| v4.2 | Hong Kong: explicit levels for all 30 fields (no silent "Allowed" defaults); legal basis updated |
 
 See `CHANGELOG.md` for details.
 
