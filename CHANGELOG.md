@@ -1,5 +1,8 @@
 # Changelog
 
+## v4.2 — Hong Kong classification fix
+All 30 fields now have an explicit level for Hong Kong, so nothing falls back to the default "Allowed". Ten fields move from Allowed to Use caution: gender, marital status, date of birth / age, photo, religion, political opinions, sexual orientation, trade union membership, location tracking and AI assessment scores. Hong Kong still has no statutory sensitive categories, so no field is raised to Restricted; the change reflects the PCPD Code of Practice on Human Resource Management (data collected from job applicants must be adequate but not excessive), the Sex Discrimination and Family Status Discrimination Ordinances, and s.21B of the Employment Ordinance. The Hong Kong legal basis shown in reports now cites these sources in all seven languages. No other market changes. Addresses part of issue #1.
+
 ## v4.1 — Seven languages
 Added Traditional Chinese (Hong Kong), Vietnamese, Indonesian, Japanese and Arabic. Arabic uses a full right-to-left layout, including the exported Word document. Each language uses local quotation and punctuation conventions. Browsers set to zh-HK, zh-TW or Cantonese open the Traditional Chinese version automatically.
 
